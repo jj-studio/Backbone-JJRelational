@@ -12,7 +12,7 @@ It is not only inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backb
 - [Installation](#installation)
 - [Defining your relations](#defining-relations)
 	- [The example we will work with](#our-example)
-	- [The relations property](#relations-property)
+	- [The relations property](#the-relations-property)
 
 <a name="installation" />
 ## Installation
