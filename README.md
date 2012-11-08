@@ -134,16 +134,16 @@ Book = Backbone.JJRelationalModel.extend({ // using 'var Book' wouldn't work in 
 A string which can be:
 
 * ##### has_one
-	for __one-to-one__ or __many-to-one__ relations. In our example, each book can have one author => has_one
+	for __one-to-one__ or __many-to-one__ relations. In our example, each book can have one author => has_one 
 	Under the `key`-attribute, the model stores a single `Backbone.JJRelationalModel`, or `null` when empty.
 	
 	
 * ##### has_many
-	for __one-to-many__ relations. In our example, each author can have many books => has_many
+	for __one-to-many__ relations. In our example, each author can have many books => has_many  
 	Under the `key`-attribute, the model stores a `Backbone.Collection` or an extension of it - provided `collectionType` has been set and the collection type has been registered with `Backbone.JJRelational.registerCollectionTypes()`. Read more at [About Collections](#about-collections)
 	
 * ##### many_many
-	for __many-to-many__ relations. In our example, each author can have many publishers and each publisher can have many authors => many_many
+	for __many-to-many__ relations. In our example, each author can have many publishers and each publisher can have many authors => many_many  
 	Same as in _has_many_: Under the `key`-attribute, the model stores a `Backbone.Collection` or an extension of it - provided `collectionType` has been set and the collection type has been registered with `Backbone.JJRelational.registerCollectionTypes()`. Read more at [About Collections](#about-collections)
 
 
