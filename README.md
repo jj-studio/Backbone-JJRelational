@@ -16,6 +16,8 @@ It is not only inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backb
 	- [The importance of reverse relations](#the-importance-of-reverse-relations)
 - [Getting and setting your data](#getting-and-setting-your-data)
 - [About collections](#about-collections)
+	- [Registering collections](#registering-collections)
+	- [Limitations](#limitations)
 
 <a name="installation" />
 ## Installation
@@ -61,7 +63,9 @@ Author = Backbone.JJRelationalModel.extend({
 	]
 });
 
-AuthorsColl = Backbone.Collection.extend({});
+AuthorsColl = Backbone.Collection.extend({
+	model: Author
+});
 
 // each book has one author
 Book = Backbone.JJRelationalModel.extend({
@@ -73,7 +77,9 @@ Book = Backbone.JJRelationalModel.extend({
 	}]
 });
 
-BooksColl = Backbone.Collection.extend({});
+BooksColl = Backbone.Collection.extend({
+	model: Book
+});
 
 // each publisher has many authors
 Publisher = Backbone.JJRelationalModel.extend({
@@ -86,7 +92,9 @@ Publisher = Backbone.JJRelationalModel.extend({
 	}]
 });
 
-PublishersColl = Backbone.Collection.extend({});
+PublishersColl = Backbone.Collection.extend({
+	model: Publisher
+});
 
 // register our collection types
 Backbone.JJRelational.registerCollectionTypes({
@@ -154,7 +162,7 @@ A string naming the attribute of the related model's reverse relation.
 Read more at [The importance of reverse relations](#the-importance-of-reverse-relations)
 
 #### collectionType
-A string referencing a collection type which has been registered with `Backbone.JJRelational.registerCollectionTypes()`. Reade more at [About Collections](#about-collections)
+A string referencing a collection type which has been registered with `Backbone.JJRelational.registerCollectionTypes()`. Read more at [About Collections](#about-collections)
 
 <a name="the-importance-of-reverse-relations" />
 ### The importance of reverse relations
@@ -189,7 +197,115 @@ __This is utterly important, otherwise related models won't know what to do when
 <a name="getting-and-setting-your-data" />
 ## Getting and setting your data
 
+As stated before, in a `has_one` relation, the model stores a single `Backbone.JJRelationalModel`.
+You get and set it in the usual Backbone fashion.
+
+```javascript
+var whichBook = function (book) {
+		var a = book.get('author');
+		console.log('"' + book.get('title') + '" by ' + (a ? a.get('name') : 'unknown'));
+	},
+	dickens = new Author({ name: 'Charles Dickens' }),
+	twist = new Book({ title: 'Oliver Twist', author: dickens});
+
+whichBook(twist); // <-- logs out '"Oliver Twist" by Charles Dickens'
+```
+
+In `has_many` and `many_many` relations, the model stores a `Backbone.Collection` (or an extension of it, if registered). Thus you should use collection-methods on it (by now).
+Tying to the lines of code above:
+
+```javascript
+var carroll = new Author({ name: 'Lewis Caroll' }),
+	penguin = new Publisher({ name: 'Penguin Classics', publishedAuthors: [carroll, dickens] }),
+	randomHouse = new Publisher({ name: 'Random House' });
+	
+randomHouse.get('publishedAuthors').add([carroll, dickens]);
+
+carroll.get('publishers').each(function (publisher) {
+	console.log(publisher.get('name')); // <-- logs out 'Penguin Classics' and then 'Random House'
+});
+
+carroll.get('publishers').remove(randomHouse);
+
+randomHouse.get('publishedAuthors').each(function (author) {
+	console.log(author.get('name')); // <-- logs out 'Charles Dickens'
+});
+
+```
+
+
 <a name="about-collections" />
 ## About collections
 
+<a name="registering-collections" />
+### Registering collections
 
+If the relational attribute of a `has_many` or `many_many` relation should use one of your extensions of `Backbone.Collection`, there are two steps you have to do.
+Firstly, register the collection(s) with a key of your choice by using `Backbone.JJRelational.registerCollectionTypes()`. This should happen after you've defined your collection.
+
+```javascript
+PublishersColl = Backbone.Collection.extend({
+	model: Publisher
+});
+
+Backbone.JJRelational.registerCollectionTypes({
+	'Publishers': PublishersColl
+});
+
+AuthorsColl = Backbone.Collection.extend({
+	model: Author,
+	sayHello: function () {
+		console.log('Hi, I am an author collection');
+	}
+});
+
+Backbone.JJRelational.registerCollectionTypes({
+	'Authors': AuthorsColl
+});
+```
+
+Of course you can also combine them
+
+```javascript
+Backbone.JJRelational.registerCollectionTypes({
+	'Publishers': PublishersColl,
+	'Authors': AuthorsColl
+});
+```
+
+Secondly, add the key for your collectionType to your relation options object, for example `collectionType: 'Authors'`.
+
+```javascript
+penguin.get('publishedAuthors').sayHello();
+```
+
+<a name="limitations" />
+### Limitations
+ 
+There are some things that will not work (yet). For example, when working with `has_many` or `many_many` relations, you shouldn't call `set` on your relational attribute or replace the relational collection with another.
+Here are some examples:
+- - -
+This will work
+```javascript
+var penguin = new Publisher({ title: 'Penguin Classics', publishedAuthors: [dickens, carroll] });
+```
+
+This will __NOT__ work
+```javascript
+var penguin = new Publisher({ title: 'Penguin Classics', publishedAuthors: new AuthorsColl([dickens, carroll]) });
+```
+- - -
+This will work
+```javascript
+var authors = penguin.get('publishedAuthors');
+authors.add([dickens, carroll]);
+```
+
+This will __NOT__ work
+```javascript
+var authors = new AuthorsColl([dickens, carroll]);
+penguin.set('publishedAuthors', authors);
+```
+- - -
+
+On relational collections, use collection methods like `add`, `reset`, `remove` etc.
