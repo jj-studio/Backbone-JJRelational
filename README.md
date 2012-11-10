@@ -18,12 +18,14 @@ It is not only inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backb
 - [About collections](#about-collections)
 	- [Registering collections](#registering-collections)
 	- [Limitations](#limitations)
+- [The Devil in the details](#the-devil-in-the-details)
+	- [Yet missing](#yet-missing)
 
 <a name="installation" />
 ## Installation
 
 Backbone JJRelational depends  - who would have thought - on [Backbone](https://github.com/documentcloud/backbone) and [Underscore](https://github.com/documentcloud/underscore).
-Simply include backbone.JJRelational.js (or the minified version) right after Underscore and Backbone.
+Simply include backbone.JJRelational.js right after Underscore and Backbone.
 
 ```html
 <script type="text/javascript" src="underscore.js"></script>
@@ -283,7 +285,7 @@ penguin.get('publishedAuthors').sayHello();
 ### Limitations
  
 There are some things that will not work (yet). For example, when working with `has_many` or `many_many` relations, you shouldn't call `set` on your relational attribute or replace the relational collection with another.
-Here are some examples:
+To clarify:
 - - -
 This will work
 ```javascript
@@ -309,3 +311,18 @@ penguin.set('publishedAuthors', authors);
 - - -
 
 On relational collections, use collection methods like `add`, `reset`, `remove` etc.
+
+<a name="the-devil-in-the-details" />
+## The Devil in the details
+
+The concept behind JJRelational is actually dirt-simple. On the creation of a model, a `change` and a `destroy` event listener is bound to it. Furthermore - if the relation type is `has_many` or `many_many` - the relational attribute is populated with a collection of the collectionType (or `Backbone.Collection`), adding to the collection a `_relational` property which is an object that takes an `owner` (the model the collection 'belongs to'), an `ownerKey` (same as `relation.key`) and `reverseKey` (same as `relation.reverseKey`).
+`Backbone.Collection.prototype.add`, `Backbone.Collection.prototype.remove` and `Backbone.Collection.prototype.reset` methods are also hacked into, checking if there are any relations and passing on the models accordingly.
+Basically it's just pushing models around, no magic involved.
+
+<a name="yet-missing" />
+### Yet missing
+
+There is no implementation of what [Paul Uithol](https://github.com/PaulUithol) is doing with [includeInJSON](https://github.com/PaulUithol/Backbone-relational#includeinjson) yet. But this will be added in the near future.
+
+
+
