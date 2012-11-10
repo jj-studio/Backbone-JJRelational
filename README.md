@@ -3,7 +3,7 @@
 ## Version 0.1
 
 
-Backbone JJRelational is a side-product of the Backbone-Silverstripe-JJRestApi and a small plugin that allows __1-to-1__, __1-to-many__ and __many-to-many__ relations between models.
+Backbone JJRelational is a small plugin that allows __1-to-1__, __1-to-many__ and __many-to-many__ relations between models.
 It is not only inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational); some ideas/lines of code have been directly taken from it.
 
 
