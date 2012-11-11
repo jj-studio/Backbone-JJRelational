@@ -227,7 +227,7 @@
           });
           this.setHasOneListeners(relation.key, relation.reverseKey, model);
         }
-        if (relation.type === 'has_many' || relation.type === 'many_many') {
+        if (relation.type === 'has_many' || 'many_many') {
           this.get(relation.key).add(model, {
             silentRelation: silent
           });
@@ -245,7 +245,7 @@
           this.set(relation.key, null, {
             silentRelation: silent
           });
-        } else if (relation.type === 'has_many' || relation.type === 'many_many') {
+        } else if (relation.type === 'has_many' || 'many_many') {
           this.get(relation.key).remove(model, {
             silentRelation: silent
           });
@@ -274,7 +274,7 @@
         if (relation.type === 'has_one' && (relModel = this.get(relation.key))) {
           this.set(relation.key, null, false);
         }
-        if (relation.type === 'has_many' || relation.type === 'many_many') {
+        if (relation.type === 'has_many' || 'many_many') {
           this.get(relation.key)._cleanup(false, true);
         }
       }

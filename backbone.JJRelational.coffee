@@ -171,7 +171,7 @@ do () ->
 									attribute.addToRelation @, relation.reverseKey, true
 								else if attribute
 									throw new TypeError 'Attribute "' + relation.key + '" is no instance of specified related model.'
-							else if relation.type is 'has_many' || 'many_many'
+							else if relation.type is 'has_many' or 'many_many'
 								throw new Warning 'You have used \'set\' on the attribute of a many-relation. That\'s bad, man. Please use get("' + relation.key + '") and perform collection operations'
 
 			false
@@ -191,7 +191,7 @@ do () ->
 				if relation.type is 'has_one'
 					@.set relation.key, model, {silentRelation: silent}
 					@.setHasOneListeners relation.key, relation.reverseKey, model
-				if relation.type is 'has_many' or relation.type is 'many_many'
+				if relation.type is 'has_many' or 'many_many'
 					@.get(relation.key).add model, {silentRelation: silent}
 
 			false
@@ -204,7 +204,7 @@ do () ->
 				if relation.type is 'has_one'
 					@.unbind 'relational:change:' + relation.key
 					@.set relation.key, null, {silentRelation:silent}
-				else if relation.type is 'has_many' or relation.type is 'many_many'
+				else if relation.type is 'has_many' or 'many_many'
 					@.get(relation.key).remove model, {silentRelation:silent}
 			@
 
@@ -227,7 +227,7 @@ do () ->
 				# inform relation of removal
 				if relation.type is 'has_one' and relModel = @.get(relation.key)
 					@.set relation.key, null, false				
-				if relation.type is 'has_many' or relation.type is 'many_many'
+				if relation.type is 'has_many' or 'many_many'
 					## console.log relation.key
 					@.get(relation.key)._cleanup(false, true)
 			@
