@@ -324,5 +324,7 @@ Basically it's just pushing models around, no magic involved.
 
 There is no implementation of what [Paul Uithol](https://github.com/PaulUithol) is doing with [includeInJSON](https://github.com/PaulUithol/Backbone-relational#includeinjson) yet. But this will be added in the near future.
 
+UPDATE: Backone JJRelational is part of another project. As that project grows, so does JJRelational. There'll be some major changes in the near future.
+
 
 
