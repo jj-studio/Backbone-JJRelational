@@ -200,7 +200,7 @@
                 } else if (attribute) {
                   throw new TypeError('Attribute "' + relation.key + '" is no instance of specified related model.');
                 }
-              } else if (relation.type === 'has_many' || 'many_many') {
+              } else if (relation.type === ('has_many' || 'many_many')) {
                 throw new Warning('You have used \'set\' on the attribute of a many-relation. That\'s bad, man. Please use get("' + relation.key + '") and perform collection operations');
               }
             }
@@ -227,7 +227,7 @@
           });
           this.setHasOneListeners(relation.key, relation.reverseKey, model);
         }
-        if (relation.type === 'has_many' || 'many_many') {
+        if (relation.type === ('has_many' || 'many_many')) {
           this.get(relation.key).add(model, {
             silentRelation: silent
           });
@@ -245,7 +245,7 @@
           this.set(relation.key, null, {
             silentRelation: silent
           });
-        } else if (relation.type === 'has_many' || 'many_many') {
+        } else if (relation.type === ('has_many' || 'many_many')) {
           this.get(relation.key).remove(model, {
             silentRelation: silent
           });
@@ -274,7 +274,7 @@
         if (relation.type === 'has_one' && (relModel = this.get(relation.key))) {
           this.set(relation.key, null, false);
         }
-        if (relation.type === 'has_many' || 'many_many') {
+        if (relation.type === ('has_many' || 'many_many')) {
           this.get(relation.key)._cleanup(false, true);
         }
       }
