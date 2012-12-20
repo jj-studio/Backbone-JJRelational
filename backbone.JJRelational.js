@@ -2,7 +2,7 @@
 
 (function() {
   "use strict";
-  var Backbone, exports, _;
+  var Backbone, exports, isManyType, isOneType, _;
   if (typeof window === 'undefined') {
     _ = require('underscore');
     Backbone = require('backbone');
@@ -200,7 +200,7 @@
                 } else if (attribute) {
                   throw new TypeError('Attribute "' + relation.key + '" is no instance of specified related model.');
                 }
-              } else if (relation.type === ('has_many' || 'many_many')) {
+              } else if (isManyType(relation)) {
                 throw new Warning('You have used \'set\' on the attribute of a many-relation. That\'s bad, man. Please use get("' + relation.key + '") and perform collection operations');
               }
             }
@@ -221,13 +221,12 @@
         relation = this.getRelationByKey(relation);
       }
       if (relation && (model instanceof relation.relatedModel === true)) {
-        if (relation.type === 'has_one') {
+        if (isOneType(relation)) {
           this.set(relation.key, model, {
             silentRelation: silent
           });
           this.setHasOneListeners(relation.key, relation.reverseKey, model);
-        }
-        if (relation.type === ('has_many' || 'many_many')) {
+        } else if (isManyType(relation)) {
           this.get(relation.key).add(model, {
             silentRelation: silent
           });
@@ -240,12 +239,12 @@
         relation = this.getRelationByKey(relation);
       }
       if (relation) {
-        if (relation.type === 'has_one') {
+        if (isOneType(relation)) {
           this.unbind('relational:change:' + relation.key);
           this.set(relation.key, null, {
             silentRelation: silent
           });
-        } else if (relation.type === ('has_many' || 'many_many')) {
+        } else if (isManyType(relation)) {
           this.get(relation.key).remove(model, {
             silentRelation: silent
           });
@@ -271,10 +270,10 @@
         this.unbind('relational:change:' + relation.key);
         this.unbind('change:' + relation.key, this.relFieldChanged);
         this.unbind('destroy', this._cleanupAllRelations);
-        if (relation.type === 'has_one' && (relModel = this.get(relation.key))) {
+        if (isOneType(relation) && (relModel = this.get(relation.key))) {
           this.set(relation.key, null, false);
         }
-        if (relation.type === ('has_many' || 'many_many')) {
+        if (isManyType(relation)) {
           this.get(relation.key)._cleanup(false, true);
         }
       }
@@ -395,9 +394,24 @@
     return this;
   };
   Backbone.Collection.prototype.__reset = Backbone.Collection.prototype.reset;
-  return Backbone.Collection.prototype.reset = function(models, options) {
+  Backbone.Collection.prototype.reset = function(models, options) {
     this.trigger('relational:reset', true, false);
     this.__reset(models, options);
     return this;
   };
+  isOneType = function(relation) {
+    if (relation.type === 'has_one') {
+      return true;
+    } else {
+      return false;
+    }
+  };
+  isManyType = function(relation) {
+    if (relation.type === 'has_many' || relation.type === 'many_many') {
+      return true;
+    } else {
+      return false;
+    }
+  };
+  return this;
 })();

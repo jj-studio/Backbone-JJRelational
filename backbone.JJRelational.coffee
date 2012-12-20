@@ -171,7 +171,7 @@ do () ->
 									attribute.addToRelation @, relation.reverseKey, true
 								else if attribute
 									throw new TypeError 'Attribute "' + relation.key + '" is no instance of specified related model.'
-							else if relation.type is ('has_many' or 'many_many')
+							else if isManyType(relation)
 								throw new Warning 'You have used \'set\' on the attribute of a many-relation. That\'s bad, man. Please use get("' + relation.key + '") and perform collection operations'
 
 			false
@@ -188,10 +188,10 @@ do () ->
 			# console.log 'adding to relation ' + relation.key
 			if relation and (model instanceof relation.relatedModel is true)
 				# handling of has_one relation
-				if relation.type is 'has_one'
+				if isOneType(relation)
 					@.set relation.key, model, {silentRelation: silent}
 					@.setHasOneListeners relation.key, relation.reverseKey, model
-				if relation.type is ('has_many' or 'many_many')
+				else if isManyType(relation)
 					@.get(relation.key).add model, {silentRelation: silent}
 
 			false
@@ -201,10 +201,10 @@ do () ->
 			if not _.isObject relation then relation = @.getRelationByKey relation
 			# console.log 'removing relation from ' + relation.key
 			if relation
-				if relation.type is 'has_one'
+				if isOneType(relation)
 					@.unbind 'relational:change:' + relation.key
 					@.set relation.key, null, {silentRelation:silent}
-				else if relation.type is ('has_many' or 'many_many')
+				else if isManyType(relation)
 					@.get(relation.key).remove model, {silentRelation:silent}
 			@
 
@@ -225,9 +225,9 @@ do () ->
 				@.unbind 'change:' + relation.key, @.relFieldChanged
 				@.unbind 'destroy', @._cleanupAllRelations
 				# inform relation of removal
-				if relation.type is 'has_one' and relModel = @.get(relation.key)
+				if isOneType(relation) and relModel = @.get(relation.key)
 					@.set relation.key, null, false				
-				if relation.type is ('has_many' or 'many_many')
+				if isManyType(relation)
 					## console.log relation.key
 					@.get(relation.key)._cleanup(false, true)
 			@
@@ -333,9 +333,13 @@ do () ->
 		@.__reset models, options
 		@
 
+	isOneType = (relation) ->
+		if relation.type is 'has_one' then true else false
 
+	isManyType = (relation) ->
+		if (relation.type is 'has_many' or relation.type is 'many_many') then true else false
 
-
+	@
 
 
 			
