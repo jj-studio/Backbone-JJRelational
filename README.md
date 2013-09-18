@@ -287,6 +287,37 @@ This will throw an error. Better use:
 var author = new Author({books: [{title: 'a book'}]}); // works fine!
 ```
 
+<a name="saving-and-fetching-data" />
+## Sync - saving and fetching data
+
+Backbone.JJRelational handles everything for you automatically. Nevertheless, this section should explain some of the concepts and possibilities you have when fetching from/persisting to the server.
+When calling __save__ on a model, the `includeInJSON` property you defined for the relation is used to generate the JSON which gets persisted to the server. Going further, it is checked for you if a related model is new: If yes, the related model __gets saved before_! Confused? This example should make your head spin even more:
+
+```javascript
+// We pretend our relational setup is the same as in the setup example.
+// So Publishers include publishedAuthors.id, Authors include books.id and books.title
+
+var publisher = new Publisher({ name: "Faber & Faber", authors: [{ firstname: "Martin", surname: "McDonagh", books: [{ title: "The Pillowman" }] }] });
+publisher.save();
+```
+Okay, now what's going to happen? Publisher relies on the author's id, author relies on the book's id. So at first a save request is fired for "The Pillowman":
+```json
+{
+"title": "The Pillowman"
+}
+```
+Provided the book gets persisted to a database, for example, and gets an id, "Martin McDonagh"'s request is fired:
+```
+{
+"firstname": "Martin"
+"surname": "McDonagh"
+"books": [{
+"id": 1,
+"title: "The Pillowman"
+}]
+}
+```
+
 <a name="devil-in-the-details" />
 ## The Devil in the details
 
