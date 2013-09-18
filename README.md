@@ -1,30 +1,29 @@
 # Backbone JJRelational
 
-## Version 0.1
+## Version 0.2.0
 
-
-Backbone JJRelational is a small plugin that allows __1-to-1__, __1-to-many__ and __many-to-many__ relations between models.
-It is not only inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational); some ideas/lines of code have been directly taken from it.
-
+__Backbone JJRelational__ is a plugin that provides __one-to-one, one-to-many, many-to-one and many-to-many__ bi-directional relations between Backbone models.  
+  
+Backbone JJRelational is inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational) and is part of the [JJRestApi](#)-project, but works also alone, of course.  
+  
+Backbone JJRelational has been tested with Backbone 0.9.9 and Underscore 1.4.3
 
 ## Table Of Contents
 
 - [Installation](#installation)
-- [Defining your relations](#defining-relations)
-	- [The example we will work with](#our-example)
-	- [The relations property](#the-relations-property)
-	- [The importance of reverse relations](#the-importance-of-reverse-relations)
-- [Getting and setting your data](#getting-and-setting-your-data)
-- [About collections](#about-collections)
-	- [Registering collections](#registering-collections)
-	- [Limitations](#limitations)
-- [The Devil in the details](#the-devil-in-the-details)
-	- [Yet missing](#yet-missing)
+- [How to use](#how-to-use)
+- [Setup example](#setup-example)
+- [Getting and setting data](#getting-and-setting-data)
+- [The devil in the details](#devil-in-the-details)
+- [Why another relational plugin?](#why-another-relational-plugin)
+- [Full example](#full-example)
+- [Reference](#reference)
+- [License](#license)
 
-<a name="installation" />
+<a name="installation" /> 
 ## Installation
 
-Backbone JJRelational depends  - who would have thought - on [Backbone](https://github.com/documentcloud/backbone) and [Underscore](https://github.com/documentcloud/underscore).
+Backbone JJRelational depends - who would have thought - on [Backbone.JS](https://github.com/documentcloud/backbone) and [Underscore.JS](https://github.com/documentcloud/underscore).  
 Simply include backbone.JJRelational.js right after Underscore and Backbone.
 
 ```html
@@ -33,27 +32,92 @@ Simply include backbone.JJRelational.js right after Underscore and Backbone.
 <script type="text/javascript" src="backbone.JJRelational.js"></script>
 ```
 
+<a name="how-to-use" />
+## How to use
+When defining your models, simply extend from `Backbone.JJRelationalModel` instead of the regular `Backbone.Model` and define a property named `storeIdentifier` and a property named `relations`, whick takes an array of objects containing your relational options. Each defined relational options object must at least contain `type`, `relatedModel`, `key` and `reverseKey`.  
+For each specified relation, you must define the reverse relation on the other side.
+Let's take a closer look at this.
 
-<a name="defining-relations" />
-## Defining your relations
+### storeIdentifier
 
-When defining your models, simply extend from `Backbone.JJRelationalModel` instead of the usual `Backbone.Model` and define a property named `relations`, which takes an array of objects containing your relational options.
+A string and mandatory. As each model registers itself in `Backbone.JJStore` upon creation, you have to define an identifier for a store, where instances of the model are put.  
+Example:  
+```javascript
+Book = Backbone.JJRelationalModel.extend({
+	storeIdentifier: 'Book'
+});
+```
 
-<a name="our-example" />
-### The example we will work with
+###  Relational options
 
+Following options you can use when defining `relations`.
+
+#### type
+_mandatory_  
+A string that defines the type of the relation (from the model's point of view!).
+Possible values are  
+`has_one`: for __one-to-one__ or __many-to-one__ relations  
+`has_many`: for __one-to-many__ relations  
+`many_many`: for __many-to-many__ relations  
+
+#### relatedModel
+_mandatory_  
+Same as in [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational), this is a string which can be resolved to an object type on the global scope, or a reference to a `Backbone.JJRelationalModel` type.
+This - of course - defines which kind of models fill this relation.
+
+#### key
+_mandatory_  
+A string naming the attribute under which the relation is stored.  
+`has_one` relations are stored as a single `Backbone.JJRelationalModel`, or `null` when empty.  
+`has_many` relations are stored as a `Backbone.Collection` or an extension of it - provided `collectionType` has been set and the collection type has been registered with `Backbone.JJRelational.registerCollectionTypes`.
+
+#### reverseKey
+_mandatory_  
+A string naming the attribute of the related model's reverse relation. This is the same as `key` from the related model's point of view.  
+For every relation you specify on a model, you __always__ have to specify a reverse relation on the related model in a fitting pattern. Remember: Each `key` is the same as `reverseKey` on the related side.  
+Confused? Take a look at the [Setup example](#setup-example)
+
+#### collectionType
+A string referencing a collecion type which has been registered with `Backbone.JJRelational.registerCollectionTypes()`. 
+Explanation: If the relational attribute of a `has_many` or `many_many` relation should use one of your extensions of `Backbone.Collection`, you have to register the collection(s) with a key of your choice by using `Backbone.JJRelational.registerCollectionTypes()`, and then use that key within the relation's `collectionType` option.  
+Example:  
+```javascript```
+BooksColl = Backbone.Collection.extend({
+	model: Book
+});
+
+Backbone.JJRelational.registerCollectionTypes({
+	'Books': BooksColl
+	// …
+	// … 
+})
+```
+…and then within your relation options `collectionType: 'Books'`.
+
+#### includeInJSON
+This is an array of strings defining which attributes should be included when the model is saved.
+Leaving `includeInJSON` empty means that merely the related model's `id` is included.
+
+<a name="setup-example" />
+## Setup example
+Here is an example of how the relations between different models could be defined:
 
 ```javascript
+/*
+** Author
+*/
 
 // each author can have many books, and many publishers
 Author = Backbone.JJRelationalModel.extend({
+	storeIdentifier: 'Author',
 	relations: [
 		{
 			type: 'has_many',
 			relatedModel: 'Book',
 			key: 'books',
 			reverseKey: 'author',
-			collectionType: 'Books'
+			collectionType: 'Books',
+			includeInJSON: ['id', 'title']
 		},
 		{
 			type: 'many_many',
@@ -69,13 +133,19 @@ AuthorsColl = Backbone.Collection.extend({
 	model: Author
 });
 
+/*
+** Book
+*/
+
 // each book has one author
 Book = Backbone.JJRelationalModel.extend({
+	storeIdentifier: 'Book',
 	relations: [{
 		type: 'has_one',
 		relatedModel: 'Author',
 		key: 'author',
-		reverseKey: 'books'
+		reverseKey: 'books',
+		includeInJSON: ['id', 'firstname', 'surname']
 	}]
 });
 
@@ -83,8 +153,13 @@ BooksColl = Backbone.Collection.extend({
 	model: Book
 });
 
+/*
+** Publisher
+*/
+
 // each publisher has many authors
 Publisher = Backbone.JJRelationalModel.extend({
+	storeIdentifier: 'Publisher',
 	relations: [{
 		type: 'many_many',
 		relatedModel: 'Author',
@@ -98,233 +173,174 @@ PublishersColl = Backbone.Collection.extend({
 	model: Publisher
 });
 
-// register our collection types
+// register collection types
 Backbone.JJRelational.registerCollectionTypes({
 	'Authors': AuthorsColl,
 	'Books': BooksColl,
 	'Publishers': PublishersColl
 });
 
-
 ```
+<a name="getting-and-setting-data" />
+## Getting and setting data
 
-<a name="relations-property	" />
-### The relations property
-
-Let's take a closer look at the relations property: Each options object takes `type`, `relatedModel`, `key`, `reverseKey` and `collectionType` as arguments.
-
-#### key
-A string naming the attribute on which the relation can be accessed. (in the example above you would get the books of an author by calling `anAuthor.get('books');`).
-
-#### relatedModel
-Same as in [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational), this is a string which can be resolved to an object type on the global scope, or a reference to a `Backbone.JJRelationalModel` type.
-
-Check this:
-
-```javascript
-Author = Backbone.JJRelationalModel.extend({ // using 'var Author' would work in this case
-	relations: [{
-			type: 'has_many',
-			relatedModel: Book,		// this won't work, but using the string 'Book' will
-			key: 'books',
-			reverseKey: 'author',
-			collectionType: 'Books'
-	}]
-});
-
-Book = Backbone.JJRelationalModel.extend({ // using 'var Book' wouldn't work in this case
-	relations: [{
-		type: 'has_one',
-		relatedModel: Author, // this works, but using the string 'Author' would work as well
-		key: 'author',
-		reverseKey: 'books'
-	}]
-});
-```
-
-
-#### type
-A string which can be:
-
-* ##### has_one
-	for __one-to-one__ or __many-to-one__ relations. In our example, each book can have one author => has_one   
-	Under the `key`-attribute, the model stores a single `Backbone.JJRelationalModel`, or `null` when empty.
-	
-	
-* ##### has_many
-	for __one-to-many__ relations. In our example, each author can have many books => has_many  
-	Under the `key`-attribute, the model stores a `Backbone.Collection` or an extension of it - provided `collectionType` has been set and the collection type has been registered with `Backbone.JJRelational.registerCollectionTypes()`. Read more at [About Collections](#about-collections)
-	
-* ##### many_many
-	for __many-to-many__ relations. In our example, each author can have many publishers and each publisher can have many authors => many_many  
-	Same as in _has_many_: Under the `key`-attribute, the model stores a `Backbone.Collection` or an extension of it - provided `collectionType` has been set and the collection type has been registered with `Backbone.JJRelational.registerCollectionTypes()`. Read more at [About Collections](#about-collections)
-	
-#### reverseKey
-A string naming the attribute of the related model's reverse relation.
-Read more at [The importance of reverse relations](#the-importance-of-reverse-relations)
-
-#### collectionType
-A string referencing a collection type which has been registered with `Backbone.JJRelational.registerCollectionTypes()`. Read more at [About Collections](#about-collections)
-
-<a name="the-importance-of-reverse-relations" />
-### The importance of reverse relations
-
-For every relation you specify on a model, please bear in mind that you __always__ have to specify a reverse relation on the related model in a fitting pattern.
-In our example's relation between `Author` and `Book`, the relation on the _Author_-side looks like:
-
-```javascript
-{
-	type: 'has_many',
-	relatedModel: 'Book',
-	key: 'books',
-	reverseKey: 'author',
-	collectionType: 'Books'
-}
-```
-
-and on the _Book_-side
-
-```javascript
-{
-	type: 'has_one',
-	relatedModel: 'Author',
-	key: 'author',
-	reverseKey: 'books'
-}
-```
-
-Each `key` property is the same as the `reverseKey` on the related side.
-__This is utterly important, otherwise related models won't know what to do when faced with changes!__
-
-<a name="getting-and-setting-your-data" />
-## Getting and setting your data
-
-As stated before, in a `has_one` relation, the model stores a single `Backbone.JJRelationalModel`.
-You get and set it in the usual Backbone fashion.
-
+As stated before, in a `has_one` relation, the model stores a single `Backbone.JJRelationalModel`. You get and set it in the usual Backbone fashion.  
+  
 ```javascript
 var whichBook = function (book) {
 		var a = book.get('author');
-		console.log('"' + book.get('title') + '" by ' + (a ? a.get('name') : 'unknown'));
+		console.log('"' + book.get('title') + '" by ' + a.get('firstname') + ' ' + a.get('surname'));
 	},
-	dickens = new Author({ name: 'Charles Dickens' }),
-	twist = new Book({ title: 'Oliver Twist', author: dickens});
-
-whichBook(twist); // <-- logs out '"Oliver Twist" by Charles Dickens'
+	twist = new Book({
+		title: 'Oliver Twist',
+		author: {
+			firstname: 'Charles',
+			surname: 'Dickens'
+		}
+	});
+	
+whichBook(twist); // <-- logs out '"Oliver Twist" by Charles Dickens
 ```
 
-In `has_many` and `many_many` relations, the model stores a `Backbone.Collection` (or an extension of it, if registered). Thus you should use collection-methods on it (by now).
-Tying to the lines of code above:
-
+In `has_many` and `many_many` relations, the model stores an instance of `Backbone.Collection` (or an extension of it, if registered). Thus you should use collection methods on it.  
+Tying to the lines of code above:  
 ```javascript
-var carroll = new Author({ name: 'Lewis Caroll' }),
-	penguin = new Publisher({ name: 'Penguin Classics', publishedAuthors: [carroll, dickens] }),
+var caroll = new Author({ name: 'Lewis Caroll' }),
+	penguin = new Publisher({
+		name: 'Penguin Classics',
+		publishedAuthors: [caroll, dickens]
+	}),
 	randomHouse = new Publisher({ name: 'Random House' });
 	
 randomHouse.get('publishedAuthors').add([carroll, dickens]);
 
 carroll.get('publishers').each(function (publisher) {
-	console.log(publisher.get('name')); // <-- logs out 'Penguin Classics' and then 'Random House'
+	console.log(publisher.get('name')); // <-- logs out 'Penguin Classics' and 'Random House'
 });
 
 carroll.get('publishers').remove(randomHouse);
 
 randomHouse.get('publishedAuthors').each(function (author) {
-	console.log(author.get('name')); // <-- logs out 'Charles Dickens'
-});
-
-```
-
-
-<a name="about-collections" />
-## About collections
-
-<a name="registering-collections" />
-### Registering collections
-
-If the relational attribute of a `has_many` or `many_many` relation should use one of your extensions of `Backbone.Collection`, there are two steps you have to do.
-Firstly, register the collection(s) with a key of your choice by using `Backbone.JJRelational.registerCollectionTypes()`. This should happen after you've defined your collection.
-
-```javascript
-PublishersColl = Backbone.Collection.extend({
-	model: Publisher
-});
-
-Backbone.JJRelational.registerCollectionTypes({
-	'Publishers': PublishersColl
-});
-
-AuthorsColl = Backbone.Collection.extend({
-	model: Author,
-	sayHello: function () {
-		console.log('Hi, I am an author collection');
-	}
-});
-
-Backbone.JJRelational.registerCollectionTypes({
-	'Authors': AuthorsColl
+	console.log(author.get('firstname')); // <-- logs out 'Charles'
 });
 ```
 
-Of course you can also combine them
+You also have the possibility to merely store `id`s within the relational attributes. Those are automatically replaced with models, as soon as a model with one of these ids pops up.
+In a `has_one` relation, the id is directly stored unter the `key`-attribute.  
+In `has_many` and `many_many` relations, the relational collections have an own `id`-queue they juggle around with.
+For clarification, check out the following lines of code:
 
 ```javascript
-Backbone.JJRelational.registerCollectionTypes({
-	'Publishers': PublishersColl,
-	'Authors': AuthorsColl
-});
+var theRoad = new Book({ title: 'The Road', author: 1 }),	cormac = new Author({ id: 1, firstname: 'Cormac', surname: 'McCarthy' });
+whichBook(theRoad); // <-- logs out '"The Road" by Cormac McCarthy'
 ```
 
-Secondly, add the key for your collectionType to your relation options object, for example `collectionType: 'Authors'`.
+When the author model is created, it registers itself in the store and the book model gets notified of it - so it can replace the id with the real model.
+Take a look at these two lines, which basically have the same effect:
 
 ```javascript
-penguin.get('publishedAuthors').sayHello();
+var cormac = new Author({ id: 1, firstname: 'Cormac', surname: 'McCarthy'}),
+	theRoad = new Book({ title: 'The Road', author: 1 });
+	
 ```
 
-<a name="limitations" />
-### Limitations
- 
-There are some things that will not work (yet). For example, when working with `has_many` or `many_many` relations, you shouldn't call `set` on your relational attribute or replace the relational collection with another.
-To clarify:
-- - -
-This will work
+Although the author is created before the book, giving `author` an id (on the book model) triggers a lookup of the author.
+Same same for `has_many` and `many_many` relations:
+
 ```javascript
-var penguin = new Publisher({ title: 'Penguin Classics', publishedAuthors: [dickens, carroll] });
+var george = new Author({firstname: 'George', surname: 'Martin', books: [1]}),
+	one = new Book({ id: 1, title: 'A Game Of Thrones' }),
+	two = new Book({ id: 2, title: 'A Clash Of Kings' }),
+	three = new Book({ id: 3, title: 'A Storm Of Swords' }),
+	
+	books = george.get('books');
+	
+	books.add([2, 3, {title: 'A Feast For Crows'}]).each(function (book) {
+		whichBook(book);
+	});
+	
+	// logs out all four books
 ```
 
-This will __NOT__ work
+__NOTE__: There is one thing that you should never do, and that is directly setting a collection on a relational attribute.
+For example:
 ```javascript
-var penguin = new Publisher({ title: 'Penguin Classics', publishedAuthors: new AuthorsColl([dickens, carroll]) });
+var author = new Author({books: new BooksColl([{title: 'a book'}])}); // don't do that!
 ```
-- - -
-This will work
-```javascript
-var authors = penguin.get('publishedAuthors');
-authors.add([dickens, carroll]);
-```
+That will throw an error
 
-This will __NOT__ work
-```javascript
-var authors = new AuthorsColl([dickens, carroll]);
-penguin.set('publishedAuthors', authors);
-```
-- - -
-
-On relational collections, use collection methods like `add`, `reset`, `remove` etc.
-
-<a name="the-devil-in-the-details" />
+<a name="devil-in-the-details" />
 ## The Devil in the details
 
-The concept behind JJRelational is actually dirt-simple. On the creation of a model, a `change` and a `destroy` event listener is bound to it. Furthermore - if the relation type is `has_many` or `many_many` - the relational attribute is populated with a collection of the collectionType (or `Backbone.Collection`), adding to the collection a `_relational` property which is an object that takes an `owner` (the model the collection 'belongs to'), an `ownerKey` (same as `relation.key`) and `reverseKey` (same as `relation.reverseKey`).
-`Backbone.Collection.prototype.add`, `Backbone.Collection.prototype.remove` and `Backbone.Collection.prototype.reset` methods are also hacked into, checking if there are any relations and passing on the models accordingly.
-Basically it's just pushing models around, no magic involved.
+The concept behind JJRelational is actually dirt-simple. On the creation of a model, it registers itself in `Backbone.JJStore`, and models that could be interested in that are notified of the creation. Because relations are defined from both sides, it's easy to keep everything in sync.
+Basically it's just juggling with models and attributes.
+The following methods in JJRelational differ from Backbone core (see [reference](#reference)):
+- __Backbone.JJRelationalModel__
+	- `save`
+	- `set`
+	- `_validate`
+	- `toJSON`
+- __Backbone.Collection__
+	- `add`
+	- `update`
+	- `remove`
+	- `reset`
+	- `fetch`
+	
+<a name="why-another-relational-plugin" />
+## Why another relational plugin?
 
-<a name="yet-missing" />
-### Yet missing
+[Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational) is very good.  
+But when we were working with it, one thing that bothered us, was that Backbone-relational doesn't support many-to-many relations in a way that suited our needs. You always have to use two `Backbone.HasMany` relations, with a link model in between.  
+Long story short: we found that too inconvenient, and tried to rewrite Paul Uithol's code, however ended up with this little rascal here.
 
-There is no implementation of what [Paul Uithol](https://github.com/PaulUithol) is doing with [includeInJSON](https://github.com/PaulUithol/Backbone-relational#includeinjson) yet. But this will be added in the near future.
+<a name="full-example" />
+## Full example
 
-UPDATE: Backone JJRelational is part of another project. As that project grows, so does JJRelational. There'll be some major changes in the near future.
+@todo: link to full TodoExample
 
+---
 
+<a name="reference" />
+## Reference
 
+### Backbone.JJRelational
+#### `Config`
+( _Object_ ) Currently only stores `url_id_appendix` that is used for `fetchByIdQueue`- and `fetchByIdQueueOfModels`-calls. Default value is _'?ids='_ , the needed ids are then added comma separated. 
+
+#### `registerCollectionTypes (collTypes<Object>)`
+Registers one or many collection types, in order to build a correct collection instance for many-relations.
+
+### Backbone.JJRelationalModel
+#### `set (key<String|Object>, val<mixed|Object>, options<Object>)`
+This is pretty much the most important override. Of course it does the same as Backbone core, although it filters relational values and handles them accordingly.  
+Example:
+```javascript
+author.set({ publishers: [2, 3, publisherObj, { name: 'new publisher' }] });
+```
+
+#### `save (key<String|Object>, value<mixed|Object>, options<Object>)`
+This overrides Backbone core's `save` method.  
+The concept is: When saving a model, it is checked whether it has any relations containing a new model. If yes, the new model is saved first. When all new models have been saved, only then is the calling model saved.  
+Relational collections are saved as an array of models + idQueue.  
+Concerning relations, the `includeInJSON` property is used for serializing to JSON.
+
+#### `_validate (attrs<Object>, options<Object>)`
+The difference to Backbone core's `_validate` method is that this one flattens relational collections down to its model array. We've found that this is more convenient for more general validation functions.
+
+#### `toJSON (options<Object>)`
+If it's for saving ( `options.isSave == true ` ) then the `includeInJSON` option of the relation is used. That can go down as many levels as required.
+If `isSave` is `false`, the related models are serialized regularly with their relations represented only by ids, however.
+
+#### `toJSONWithRelIDs ()`
+Returns a JSON of the model with all relations represented only by ids.
+
+#### `fetchByIdQueue (relation<String|Object>, options<Object>)`
+Fetches missing models of a relation, if their ids are known.
+
+---
+
+<a name="license" />
+## License
+
+MIT License / Do whatever the fuck you want to do license

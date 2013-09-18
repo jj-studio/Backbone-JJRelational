@@ -1,0 +1,17 @@
+{
+  "name": "BackboneJJRelationalTestingServer",
+  "version": "0.0.1",
+  "private": "true",
+  "author": {
+    "name": "Jonathan Pirnay",
+    "email": "mail@johnnycrab.com"
+  },
+  "devDependencies": {
+    "express": "*",
+    "node-monkey": "*"
+  },
+  "main": "server",
+  "engines": {
+    "node": "*"
+  }
+}
