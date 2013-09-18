@@ -29,7 +29,7 @@ Backbone JJRelational has been tested with Backbone 1.0.0 and Underscore 1.5.0
 - [Setup example](#setup-example)
 - [Getting and setting data](#getting-and-setting-data)
 - [Sync - saving and fetching data](#saving-and-fetching-data)
-- [Working with the store](#working-with-the-store)
+- [Working with the store - prevent duplice data](#working-with-the-store)
 - [The devil in the details](#devil-in-the-details)
 - [Reference](#reference)
 - [Running the tests](#running-the-tests)
@@ -305,25 +305,25 @@ publisher.save();
 Okay, now what's going to happen? Publisher relies on the author's id, author relies on the book's id. So at first a save request is fired for "The Pillowman":
 ```json
 {
-"title": "The Pillowman"
+	"title": "The Pillowman"
 }
 ```
 Provided the book gets persisted to a database, for example, and gets an id, "Martin McDonagh"'s request is fired:
 ```json
 {
-"firstname": "Martin"
-"surname": "McDonagh"
-"books": [{
-"id": 1,
-"title: "The Pillowman"
-}]
+	"firstname": "Martin"
+	"surname": "McDonagh"
+	"books": [{
+		"id": 1,
+		"title: "The Pillowman"
+	}]
 }
 ```
 And now, at last, the publisher will be saved:
 ```json
 {
-"name": "Faber & Faber"
-"authors": [1]
+	"name": "Faber & Faber"
+	"authors": [1]
 }
 ```
 ### Fetching
@@ -333,13 +333,13 @@ When fetching data from the server, Backbone.JJRelational automatically creates 
 ```json
 [
 {
-"id": 1,
-"name": "Faber & Faber",
-"authors": [{
-"id": 1,
-"firstname": "Martin",
-"surname": "McDonagh"
-}]
+	"id": 1,
+	"name": "Faber & Faber",
+	"authors": [{
+		"id": 1,
+		"firstname": "Martin",
+		"surname": "McDonagh"
+	}]
 }
 ]
 ```
@@ -347,14 +347,14 @@ The author model "Martin McDonagh" will be created automatically. Now let's pret
 ```json
 [
 {
-"id": 1,
-"name": "Faber & Faber",
-"authors": [1,2]
+	"id": 1,
+	"name": "Faber & Faber",
+	"authors": [1,2]
 },
 {
-"id": 2,
-"name": "Random House",
-"authors": [3,4]
+	"id": 2,
+	"name": "Random House",
+	"authors": [3,4]
 }
 ]
 ```
@@ -373,6 +373,39 @@ pubColl.fetchByIdQueueOfModels('authors');
 ```
 
 This will fetch the authors with IDs 1, 2, 3 & 4 and add them to their related publishers appropriately.
+
+<a name="working-with-the-store" />
+## Working with the store - prevent duplicate data
+
+Backbone.JJStore acts as the big data store in your application which every newly created model registers itself at with its `id` and `storeIdentifier`. Each time a new model is created, all other models (which could be interested in a relationship to this new model) are informed of its creation. It's the same the other way round: Each time a mere ID is added to a relation, the store checks if there's already a model with the same id/storeIdentifier combination. If yes, the model from the store is used rather than the raw ID. 
+Naturally, all this can work only if there are no duplicates present. 
+This is what the configuration `Backbone.JJRelational.Config.work_with_store` (defaults to `true`) ensures.
+In JJRelational, when you create a new model with an existing storeIdentifier/id combination, __the existing model with updated attributes will be returned__.
+Let's clarify this with an example. 
+
+```javascript
+var a = new Author({ id: 1, firstname: "Jane", surname: "Doe" });
+console.log("a: cid is %s and name is %s %s", a.cid, a.get('firstname'), a.get('surname'));
+
+var b = new Author({ id: 1, firstname: "Jane", surname: "Austen" });
+console.log("b: cid is %s and name is %s %s", b.cid, b.get('firstname'), b.get('surname'));
+```
+
+In a regular Backbone application, this would output:
+```
+>  a: cid is c1 and name is Jane Doe
+>  b: cid is c2 and name is Jane Austen
+```
+
+In JJRelational when `work_with_store` is set to `true`, the same logs would output: 
+```
+> a: cid is c1 and name is Jane Doe
+> b: cid is c1 and name is Jane Austen
+```
+
+Smash. The store realizes there's already an author with the same ID, so it merely updates the existing one.
+
+You can turn this behaviour off by setting `Backbone.JJRelational.Config.work_with_store` to `false`, however you should keep in mind that the synchronization of relations only works properly in __a duplicate-free environment__. 
 
 <a name="devil-in-the-details" />
 ## The Devil in the details
