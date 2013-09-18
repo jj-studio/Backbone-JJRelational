@@ -290,8 +290,10 @@ var author = new Author({books: [{title: 'a book'}]}); // works fine!
 <a name="saving-and-fetching-data" />
 ## Sync - saving and fetching data
 
+### Saving
+
 Backbone.JJRelational handles everything for you automatically. Nevertheless, this section should explain some of the concepts and possibilities you have when fetching from/persisting to the server.
-When calling __save__ on a model, the `includeInJSON` property you defined for the relation is used to generate the JSON which gets persisted to the server. Going further, it is checked for you if a related model is new: If yes, the related model __gets saved before_! Confused? This example should make your head spin even more:
+When calling __save__ on a model, the `includeInJSON` property you defined for the relation is used to generate the JSON which gets persisted to the server. Going further, it is checked for you if a related model is new: If yes, the related model __gets saved before__! Confused? This example should make your head spin even more:
 
 ```javascript
 // We pretend our relational setup is the same as in the setup example.
@@ -307,7 +309,7 @@ Okay, now what's going to happen? Publisher relies on the author's id, author re
 }
 ```
 Provided the book gets persisted to a database, for example, and gets an id, "Martin McDonagh"'s request is fired:
-```
+```json
 {
 "firstname": "Martin"
 "surname": "McDonagh"
@@ -317,6 +319,60 @@ Provided the book gets persisted to a database, for example, and gets an id, "Ma
 }]
 }
 ```
+And now, at last, the publisher will be saved:
+```json
+{
+"name": "Faber & Faber"
+"authors": [1]
+}
+```
+### Fetching
+
+When fetching data from the server, Backbone.JJRelational automatically creates the needed models in a relation. Image we would call `fetch` on a collection of publishers and it would return:
+
+```json
+[
+{
+"id": 1,
+"name": "Faber & Faber",
+"authors": [{
+"id": 1,
+"firstname": "Martin",
+"surname": "McDonagh"
+}]
+}
+]
+```
+The author model "Martin McDonagh" will be created automatically. Now let's pretend, fetching the publishers would result in merely an ID array of its authors:
+```json
+[
+{
+"id": 1,
+"name": "Faber & Faber",
+"authors": [1,2]
+},
+{
+"id": 2,
+"name": "Random House",
+"authors": [3,4]
+}
+]
+```
+In this case, JJRelational doesn't create new author models, but stores the IDs in a queue within the relational collection. (`Backbone.Collection._relational.idQueue`)
+If `faber` is our first publisher model, we can call
+
+```javascript
+faber.get('authors').fetchByIdQueue();
+```
+
+This will fetch the authors with IDs 1 and 2 and add them to the collection. (this works for one-to-one and one-to-many relations as well, of course)
+Or, if we want to fetch _all related authors of the whole collection_, we can call: (pretending `pubColl` is our collection of publishers):
+
+```javascript
+pubColl.fetchByIdQueueOfModels('authors');
+```
+
+This will fetch the authors with IDs 1, 2, 3 & 4 and add them to their related publishers appropriately.
 
 <a name="devil-in-the-details" />
 ## The Devil in the details
@@ -376,6 +432,9 @@ If any IDs are stored in the collection's idQueue, this method will fetch the mi
 
 #### `fetchByIdQueueOfModels (relation<String|Object>, options<Object>)`
 Sums up `fetchByIdQueue`-calls on the same relation in a whole collection by collection the idQueues of each model and firing a single request. The fetched models are automatically added to their appropriate relations.
+
+#### `getIDArray`
+Returns an array of the collection's models' IDs + any IDs stored within the collection's idQueue (if present)
 
 
 ---
