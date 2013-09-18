@@ -1,22 +1,35 @@
-# Backbone JJRelational
+ 
+```
+__________                __   ___.                         
+\______   \_____    ____ |  | _\_ |__   ____   ____   ____  
+ |    |  _/\__  \ _/ ___\|  |/ /| __ \ /  _ \ /    \_/ __ \ 
+ |    |   \ / __ \\  \___|    < | \_\ (  <_> )   |  \  ___/ 
+ |______  /(____  /\___  >__|_ \|___  /\____/|___|  /\___  >
+        \/      \/     \/     \/    \/            \/     \/ 
+     ____.    ____.__________       .__          __  .__                     .__   
+    |    |   |    |\______   \ ____ |  | _____ _/  |_|__| ____   ____ _____  |  |  
+    |    |   |    | |       _// __ \|  | \__  \\   __\  |/  _ \ /    \\__  \ |  |  
+/\__|    /\__|    | |    |   \  ___/|  |__/ __ \|  | |  (  <_> )   |  \/ __ \|  |__
+\________\________| |____|_  /\___  >____(____  /__| |__|\____/|___|  (____  /____/
+                           \/     \/          \/                    \/     \/      
+```
 
-## Version 0.2.0
+### Version 0.2.6
 
 __Backbone JJRelational__ is a plugin that provides __one-to-one, one-to-many, many-to-one and many-to-many__ bi-directional relations between Backbone models.  
   
-Backbone JJRelational is inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational) and is part of the [JJRestApi](#)-project, but works also alone, of course.  
+Backbone JJRelational is inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational), but supports many-to-many relations out of the box.
   
-Backbone JJRelational has been tested with Backbone 0.9.9 and Underscore 1.4.3
+Backbone JJRelational has been tested with Backbone 1.0.0 and Underscore 1.5.0
 
 ## Table Of Contents
 
 - [Installation](#installation)
+- [Running the tests](#running-the-tests)
 - [How to use](#how-to-use)
 - [Setup example](#setup-example)
 - [Getting and setting data](#getting-and-setting-data)
 - [The devil in the details](#devil-in-the-details)
-- [Why another relational plugin?](#why-another-relational-plugin)
-- [Full example](#full-example)
 - [Reference](#reference)
 - [License](#license)
 
@@ -31,10 +44,23 @@ Simply include backbone.JJRelational.js right after Underscore and Backbone.
 <script type="text/javascript" src="backbone.js"></script>
 <script type="text/javascript" src="backbone.JJRelational.js"></script>
 ```
+<a name="running-the-tests" />
+## Running the tests
+
+If you want to run the tests supplied, open up your terminal, change into the tests directory, run
+```
+$ npm update
+```
+once and then start the server with
+```
+$ node server.js
+```
+In your browser, navigate to [http://localhost:3000/tests.html](http://localhost:3000/tests.html). That's it.
+
 
 <a name="how-to-use" />
 ## How to use
-When defining your models, simply extend from `Backbone.JJRelationalModel` instead of the regular `Backbone.Model` and define a property named `storeIdentifier` and a property named `relations`, whick takes an array of objects containing your relational options. Each defined relational options object must at least contain `type`, `relatedModel`, `key` and `reverseKey`.  
+When defining your models, simply extend from `Backbone.JJRelationalModel` instead of the regular `Backbone.Model` and define a property named `storeIdentifier` and a property named `relations`, which takes an array of objects containing your relational options. Each defined relational options object must at least contain `type`, `relatedModel`, `key` and `reverseKey`.  
 For each specified relation, you must define the reverse relation on the other side.
 Let's take a closer look at this.
 
@@ -287,17 +313,6 @@ The following methods in JJRelational differ from Backbone core (see [reference]
 	- `reset`
 	- `fetch`
 	
-<a name="why-another-relational-plugin" />
-## Why another relational plugin?
-
-[Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational) is very good.  
-But when we were working with it, one thing that bothered us, was that Backbone-relational doesn't support many-to-many relations in a way that suited our needs. You always have to use two `Backbone.HasMany` relations, with a link model in between.  
-Long story short: we found that too inconvenient, and tried to rewrite Paul Uithol's code, however ended up with this little rascal here.
-
-<a name="full-example" />
-## Full example
-
-@todo: link to full TodoExample
 
 ---
 
