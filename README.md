@@ -25,12 +25,12 @@ Backbone JJRelational has been tested with Backbone 1.0.0 and Underscore 1.5.0
 ## Table Of Contents
 
 - [Installation](#installation)
-- [Running the tests](#running-the-tests)
 - [How to use](#how-to-use)
 - [Setup example](#setup-example)
 - [Getting and setting data](#getting-and-setting-data)
 - [The devil in the details](#devil-in-the-details)
 - [Reference](#reference)
+- [Running the tests](#running-the-tests)
 - [License](#license)
 
 <a name="installation" /> 
@@ -44,24 +44,11 @@ Simply include backbone.JJRelational.js right after Underscore and Backbone.
 <script type="text/javascript" src="backbone.js"></script>
 <script type="text/javascript" src="backbone.JJRelational.js"></script>
 ```
-<a name="running-the-tests" />
-## Running the tests
-
-If you want to run the tests supplied, open up your terminal, change into the tests directory, run
-```
-$ npm update
-```
-once and then start the server with
-```
-$ node server.js
-```
-In your browser, navigate to [http://localhost:3000/tests.html](http://localhost:3000/tests.html). That's it.
-
 
 <a name="how-to-use" />
 ## How to use
 When defining your models, simply extend from `Backbone.JJRelationalModel` instead of the regular `Backbone.Model` and define a property named `storeIdentifier` and a property named `relations`, which takes an array of objects containing your relational options. Each defined relational options object must at least contain `type`, `relatedModel`, `key` and `reverseKey`.  
-For each specified relation, you must define the reverse relation on the other side.
+For each specified relation, you must define the reverse relation on the other side. __This is very important__, if you want JJRelational to work properly.
 Let's take a closer look at this.
 
 ### storeIdentifier
@@ -76,7 +63,7 @@ Book = Backbone.JJRelationalModel.extend({
 
 ###  Relational options
 
-Following options you can use when defining `relations`.
+You can use the following options when defining `relations`.
 
 #### type
 _mandatory_  
@@ -89,7 +76,7 @@ Possible values are
 #### relatedModel
 _mandatory_  
 Same as in [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational), this is a string which can be resolved to an object type on the global scope, or a reference to a `Backbone.JJRelationalModel` type.
-This - of course - defines which kind of models fill this relation.
+This - of course - defines which kind of model fills this relation.
 
 #### key
 _mandatory_  
@@ -104,7 +91,7 @@ For every relation you specify on a model, you __always__ have to specify a reve
 Confused? Take a look at the [Setup example](#setup-example)
 
 #### collectionType
-A string referencing a collecion type which has been registered with `Backbone.JJRelational.registerCollectionTypes()`. 
+A string referencing a collection type which has been registered with `Backbone.JJRelational.registerCollectionTypes()`. 
 Explanation: If the relational attribute of a `has_many` or `many_many` relation should use one of your extensions of `Backbone.Collection`, you have to register the collection(s) with a key of your choice by using `Backbone.JJRelational.registerCollectionTypes()`, and then use that key within the relation's `collectionType` option.  
 Example:  
 ```javascript```
@@ -231,7 +218,7 @@ whichBook(twist); // <-- logs out '"Oliver Twist" by Charles Dickens
 In `has_many` and `many_many` relations, the model stores an instance of `Backbone.Collection` (or an extension of it, if registered). Thus you should use collection methods on it.  
 Tying to the lines of code above:  
 ```javascript
-var caroll = new Author({ name: 'Lewis Caroll' }),
+var carroll = new Author({ name: 'Lewis Carroll' }),
 	penguin = new Publisher({
 		name: 'Penguin Classics',
 		publishedAuthors: [caroll, dickens]
@@ -251,8 +238,8 @@ randomHouse.get('publishedAuthors').each(function (author) {
 });
 ```
 
-You also have the possibility to merely store `id`s within the relational attributes. Those are automatically replaced with models, as soon as a model with one of these ids pops up.
-In a `has_one` relation, the id is directly stored unter the `key`-attribute.  
+You also have the possibility to merely store `id`s within the relational attributes. These are automatically replaced with appropriate models, as soon as a model with one of these ids is created.
+In a `has_one` relation, the id is directly stored under the `key`-attribute.  
 In `has_many` and `many_many` relations, the relational collections have an own `id`-queue they juggle around with.
 For clarification, check out the following lines of code:
 
@@ -293,26 +280,18 @@ For example:
 ```javascript
 var author = new Author({books: new BooksColl([{title: 'a book'}])}); // don't do that!
 ```
-That will throw an error
+This will throw an error. Better use:
+```javascript
+var author = new Author({books: [{title: 'a book'}]}); // works fine!
+```
 
 <a name="devil-in-the-details" />
 ## The Devil in the details
 
-The concept behind JJRelational is actually dirt-simple. On the creation of a model, it registers itself in `Backbone.JJStore`, and models that could be interested in that are notified of the creation. Because relations are defined from both sides, it's easy to keep everything in sync.
+The concept behind JJRelational is actually dirt-simple. On the creation of a model, it registers itself in `Backbone.JJStore`, and other models that could be interested in it are notified of the creation. Because relations are defined from both sides, it's easy to keep everything in sync.
 Basically it's just juggling with models and attributes.
-The following methods in JJRelational differ from Backbone core (see [reference](#reference)):
-- __Backbone.JJRelationalModel__
-	- `save`
-	- `set`
-	- `_validate`
-	- `toJSON`
-- __Backbone.Collection__
-	- `add`
-	- `update`
-	- `remove`
-	- `reset`
-	- `fetch`
-	
+
+Some of Backbone methods had to be wrapped within some relational methods.	
 
 ---
 
@@ -321,7 +300,10 @@ The following methods in JJRelational differ from Backbone core (see [reference]
 
 ### Backbone.JJRelational
 #### `Config`
-( _Object_ ) Currently only stores `url_id_appendix` that is used for `fetchByIdQueue`- and `fetchByIdQueueOfModels`-calls. Default value is _'?ids='_ , the needed ids are then added comma separated. 
+( _Object_ ) Global configuration object.
+Possible values are:
+- `url_id_appendix`: used for `fetchByIdQueue`- and `fetchByIdQueueOfModels`-calls. Default value is _'?ids='_ , the needed ids are then added comma separated. 
+- `work_with_store`: Default is `true`. This option indicates whether you want Backbone.JJStore to prevent duplication of models. See [Working with the store](#working-with-the-store) for more information.
 
 #### `registerCollectionTypes (collTypes<Object>)`
 Registers one or many collection types, in order to build a correct collection instance for many-relations.
@@ -335,7 +317,7 @@ author.set({ publishers: [2, 3, publisherObj, { name: 'new publisher' }] });
 ```
 
 #### `save (key<String|Object>, value<mixed|Object>, options<Object>)`
-This overrides Backbone core's `save` method.  
+Backbone's original `save`-method wrapped in relational stuff. 
 The concept is: When saving a model, it is checked whether it has any relations containing a new model. If yes, the new model is saved first. When all new models have been saved, only then is the calling model saved.  
 Relational collections are saved as an array of models + idQueue.  
 Concerning relations, the `includeInJSON` property is used for serializing to JSON.
@@ -354,7 +336,19 @@ Returns a JSON of the model with all relations represented only by ids.
 Fetches missing models of a relation, if their ids are known.
 
 ---
+<a name="running-the-tests" />
+## Running the tests
 
+If you want to run the tests supplied, open up your terminal, change into the tests directory, run
+```
+$ npm update
+```
+once and then start the server with
+```
+$ node server.js
+```
+In your browser, navigate to [http://localhost:3000/tests.html](http://localhost:3000/tests.html). That's it.
+---
 <a name="license" />
 ## License
 
