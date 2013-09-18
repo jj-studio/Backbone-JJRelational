@@ -28,6 +28,8 @@ Backbone JJRelational has been tested with Backbone 1.0.0 and Underscore 1.5.0
 - [How to use](#how-to-use)
 - [Setup example](#setup-example)
 - [Getting and setting data](#getting-and-setting-data)
+- [Sync - saving and fetching data](#saving-and-fetching-data)
+- [Working with the store](#working-with-the-store)
 - [The devil in the details](#devil-in-the-details)
 - [Reference](#reference)
 - [Running the tests](#running-the-tests)
@@ -321,6 +323,7 @@ Backbone's original `save`-method wrapped in relational stuff.
 The concept is: When saving a model, it is checked whether it has any relations containing a new model. If yes, the new model is saved first. When all new models have been saved, only then is the calling model saved.  
 Relational collections are saved as an array of models + idQueue.  
 Concerning relations, the `includeInJSON` property is used for serializing to JSON.
+See [Sync - saving and fetching data](#saving-and-fetching-data) for detailed information.
 
 #### `_validate (attrs<Object>, options<Object>)`
 The difference to Backbone core's `_validate` method is that this one flattens relational collections down to its model array. We've found that this is more convenient for more general validation functions.
@@ -333,7 +336,16 @@ If `isSave` is `false`, the related models are serialized regularly with their r
 Returns a JSON of the model with all relations represented only by ids.
 
 #### `fetchByIdQueue (relation<String|Object>, options<Object>)`
-Fetches missing models of a relation, if their ids are known.
+Fetches missing models of a relation, if their ids are known. See [Sync - saving and fetching data](#saving-and-fetching-data) for detailed information.
+
+### Backbone.Collection
+
+#### `fetchByIdQueue` (options<Object>)
+If any IDs are stored in the collection's idQueue, this method will fetch the missing models.
+
+#### `fetchByIdQueueOfModels (relation<String|Object>, options<Object>)`
+Sums up `fetchByIdQueue`-calls on the same relation in a whole collection by collection the idQueues of each model and firing a single request. The fetched models are automatically added to their appropriate relations.
+
 
 ---
 <a name="running-the-tests" />
@@ -347,7 +359,9 @@ once and then start the server with
 ```
 $ node server.js
 ```
+
 In your browser, navigate to [http://localhost:3000/tests.html](http://localhost:3000/tests.html). That's it.
+
 ---
 <a name="license" />
 ## License
