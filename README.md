@@ -413,7 +413,13 @@ You can turn this behaviour off by setting `Backbone.JJRelational.Config.work_wi
 The concept behind JJRelational is actually dirt-simple. On the creation of a model, it registers itself in `Backbone.JJStore`, and other models that could be interested in it are notified of the creation. Because relations are defined from both sides, it's easy to keep everything in sync.
 Basically it's just juggling with models and attributes.
 
-Some of Backbone methods had to be wrapped within some relational methods.	
+The following Backbone methods were overridden, all other methods (like `Collection.reset`, `Collection.set` etc.) merely perform some relational actions before actually calling the core method.
+See [Reference](#reference) for more information on the overrides:
+- `Backbone.Model.set`
+- `Backbone.Model.save`
+- `Backbone.Model._validate`
+- `Backbone.Model.toJSON`
+- `Backbone.Collection.fetch`
 
 ---
 
@@ -459,6 +465,9 @@ Returns a JSON of the model with all relations represented only by ids.
 Fetches missing models of a relation, if their ids are known. See [Sync - saving and fetching data](#saving-and-fetching-data) for detailed information.
 
 ### Backbone.Collection
+
+#### `fetch` (options<Object>)
+Of course the same as Backbone core's `fetch`, with the only exception that already existing models in the store are always smartly updated. 
 
 #### `fetchByIdQueue` (options<Object>)
 If any IDs are stored in the collection's idQueue, this method will fetch the missing models.
