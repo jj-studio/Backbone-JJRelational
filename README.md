@@ -387,14 +387,14 @@ Let's clarify this with an example.
 var a = new Author({ id: 1, firstname: "Jane", surname: "Doe" });
 console.log("a: cid is %s and name is %s %s", a.cid, a.get('firstname'), a.get('surname'));
 
-var b = new Author({ id: 1, firstname: "Jane", surname: "Austen" });
+var b = new Author({ id: 1, surname: "Austen" });
 console.log("b: cid is %s and name is %s %s", b.cid, b.get('firstname'), b.get('surname'));
 ```
 
 In a regular Backbone application, this would output:
 ```
 >  a: cid is c1 and name is Jane Doe
->  b: cid is c2 and name is Jane Austen
+>  b: cid is c2 and name is undefined Austen
 ```
 
 In JJRelational when `work_with_store` is set to `true`, the same logs would output: 
