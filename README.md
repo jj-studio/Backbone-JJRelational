@@ -1,12 +1,26 @@
-# Backbone JJRelational
+ 
+```
+__________                __   ___.                         
+\______   \_____    ____ |  | _\_ |__   ____   ____   ____  
+ |    |  _/\__  \ _/ ___\|  |/ /| __ \ /  _ \ /    \_/ __ \ 
+ |    |   \ / __ \\  \___|    < | \_\ (  <_> )   |  \  ___/ 
+ |______  /(____  /\___  >__|_ \|___  /\____/|___|  /\___  >
+        \/      \/     \/     \/    \/            \/     \/ 
+     ____.    ____.__________       .__          __  .__                     .__   
+    |    |   |    |\______   \ ____ |  | _____ _/  |_|__| ____   ____ _____  |  |  
+    |    |   |    | |       _// __ \|  | \__  \\   __\  |/  _ \ /    \\__  \ |  |  
+/\__|    /\__|    | |    |   \  ___/|  |__/ __ \|  | |  (  <_> )   |  \/ __ \|  |__
+\________\________| |____|_  /\___  >____(____  /__| |__|\____/|___|  (____  /____/
+                           \/     \/          \/                    \/     \/      
+```
 
-## Version 0.2.0
+### Version 0.2.6
 
 __Backbone JJRelational__ is a plugin that provides __one-to-one, one-to-many, many-to-one and many-to-many__ bi-directional relations between Backbone models.  
   
-Backbone JJRelational is inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational) and is part of the [JJRestApi](#)-project, but works also alone, of course.  
+Backbone JJRelational is inspired by [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational), but supports many-to-many relations out of the box.
   
-Backbone JJRelational has been tested with Backbone 0.9.9 and Underscore 1.4.3
+Backbone JJRelational has been tested with Backbone 1.0.0 and Underscore 1.5.0
 
 ## Table Of Contents
 
@@ -14,10 +28,11 @@ Backbone JJRelational has been tested with Backbone 0.9.9 and Underscore 1.4.3
 - [How to use](#how-to-use)
 - [Setup example](#setup-example)
 - [Getting and setting data](#getting-and-setting-data)
+- [Sync - saving and fetching data](#saving-and-fetching-data)
+- [Working with the store - prevent duplice data](#working-with-the-store)
 - [The devil in the details](#devil-in-the-details)
-- [Why another relational plugin?](#why-another-relational-plugin)
-- [Full example](#full-example)
 - [Reference](#reference)
+- [Running the tests](#running-the-tests)
 - [License](#license)
 
 <a name="installation" /> 
@@ -34,8 +49,8 @@ Simply include backbone.JJRelational.js right after Underscore and Backbone.
 
 <a name="how-to-use" />
 ## How to use
-When defining your models, simply extend from `Backbone.JJRelationalModel` instead of the regular `Backbone.Model` and define a property named `storeIdentifier` and a property named `relations`, whick takes an array of objects containing your relational options. Each defined relational options object must at least contain `type`, `relatedModel`, `key` and `reverseKey`.  
-For each specified relation, you must define the reverse relation on the other side.
+When defining your models, simply extend from `Backbone.JJRelationalModel` instead of the regular `Backbone.Model` and define a property named `storeIdentifier` and a property named `relations`, which takes an array of objects containing your relational options. Each defined relational options object must at least contain `type`, `relatedModel`, `key` and `reverseKey`.  
+For each specified relation, you must define the reverse relation on the other side. __This is very important__, if you want JJRelational to work properly.
 Let's take a closer look at this.
 
 ### storeIdentifier
@@ -50,7 +65,7 @@ Book = Backbone.JJRelationalModel.extend({
 
 ###  Relational options
 
-Following options you can use when defining `relations`.
+You can use the following options when defining `relations`.
 
 #### type
 _mandatory_  
@@ -63,7 +78,7 @@ Possible values are
 #### relatedModel
 _mandatory_  
 Same as in [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational), this is a string which can be resolved to an object type on the global scope, or a reference to a `Backbone.JJRelationalModel` type.
-This - of course - defines which kind of models fill this relation.
+This - of course - defines which kind of model fills this relation.
 
 #### key
 _mandatory_  
@@ -78,7 +93,7 @@ For every relation you specify on a model, you __always__ have to specify a reve
 Confused? Take a look at the [Setup example](#setup-example)
 
 #### collectionType
-A string referencing a collecion type which has been registered with `Backbone.JJRelational.registerCollectionTypes()`. 
+A string referencing a collection type which has been registered with `Backbone.JJRelational.registerCollectionTypes()`. 
 Explanation: If the relational attribute of a `has_many` or `many_many` relation should use one of your extensions of `Backbone.Collection`, you have to register the collection(s) with a key of your choice by using `Backbone.JJRelational.registerCollectionTypes()`, and then use that key within the relation's `collectionType` option.  
 Example:  
 ```javascript```
@@ -205,7 +220,7 @@ whichBook(twist); // <-- logs out '"Oliver Twist" by Charles Dickens
 In `has_many` and `many_many` relations, the model stores an instance of `Backbone.Collection` (or an extension of it, if registered). Thus you should use collection methods on it.  
 Tying to the lines of code above:  
 ```javascript
-var caroll = new Author({ name: 'Lewis Caroll' }),
+var carroll = new Author({ name: 'Lewis Carroll' }),
 	penguin = new Publisher({
 		name: 'Penguin Classics',
 		publishedAuthors: [caroll, dickens]
@@ -225,8 +240,8 @@ randomHouse.get('publishedAuthors').each(function (author) {
 });
 ```
 
-You also have the possibility to merely store `id`s within the relational attributes. Those are automatically replaced with models, as soon as a model with one of these ids pops up.
-In a `has_one` relation, the id is directly stored unter the `key`-attribute.  
+You also have the possibility to merely store `id`s within the relational attributes. These are automatically replaced with appropriate models, as soon as a model with one of these ids is created.
+In a `has_one` relation, the id is directly stored under the `key`-attribute.  
 In `has_many` and `many_many` relations, the relational collections have an own `id`-queue they juggle around with.
 For clarification, check out the following lines of code:
 
@@ -267,37 +282,138 @@ For example:
 ```javascript
 var author = new Author({books: new BooksColl([{title: 'a book'}])}); // don't do that!
 ```
-That will throw an error
+This will throw an error. Better use:
+```javascript
+var author = new Author({books: [{title: 'a book'}]}); // works fine!
+```
+
+<a name="saving-and-fetching-data" />
+## Sync - saving and fetching data
+
+### Saving
+
+Backbone.JJRelational handles everything for you automatically. Nevertheless, this section should explain some of the concepts and possibilities you have when fetching from/persisting to the server.
+When calling __save__ on a model, the `includeInJSON` property you defined for the relation is used to generate the JSON which gets persisted to the server. Going further, it is checked for you if a related model is new: If yes, the related model __gets saved before__! Confused? This example should make your head spin even more:
+
+```javascript
+// We pretend our relational setup is the same as in the setup example.
+// So Publishers include publishedAuthors.id, Authors include books.id and books.title
+
+var publisher = new Publisher({ name: "Faber & Faber", authors: [{ firstname: "Martin", surname: "McDonagh", books: [{ title: "The Pillowman" }] }] });
+publisher.save();
+```
+Okay, now what's going to happen? Publisher relies on the author's id, author relies on the book's id. So at first a save request is fired for "The Pillowman":
+```json
+{
+	"title": "The Pillowman"
+}
+```
+Provided the book gets persisted to a database, for example, and gets an id, "Martin McDonagh"'s request is fired:
+```json
+{
+	"firstname": "Martin"
+	"surname": "McDonagh"
+	"books": [{
+		"id": 1,
+		"title: "The Pillowman"
+	}]
+}
+```
+And now, at last, the publisher will be saved:
+```json
+{
+	"name": "Faber & Faber"
+	"authors": [1]
+}
+```
+### Fetching
+
+When fetching data from the server, Backbone.JJRelational automatically creates the needed models in a relation. Image we would call `fetch` on a collection of publishers and it would return:
+
+```json
+[
+{
+	"id": 1,
+	"name": "Faber & Faber",
+	"authors": [{
+		"id": 1,
+		"firstname": "Martin",
+		"surname": "McDonagh"
+	}]
+}
+]
+```
+The author model "Martin McDonagh" will be created automatically. Now let's pretend, fetching the publishers would result in merely an ID array of its authors:
+```json
+[
+{
+	"id": 1,
+	"name": "Faber & Faber",
+	"authors": [1,2]
+},
+{
+	"id": 2,
+	"name": "Random House",
+	"authors": [3,4]
+}
+]
+```
+In this case, JJRelational doesn't create new author models, but stores the IDs in a queue within the relational collection. (`Backbone.Collection._relational.idQueue`)
+If `faber` is our first publisher model, we can call
+
+```javascript
+faber.get('authors').fetchByIdQueue();
+```
+
+This will fetch the authors with IDs 1 and 2 and add them to the collection. (this works for one-to-one and one-to-many relations as well, of course)
+Or, if we want to fetch _all related authors of the whole collection_, we can call: (pretending `pubColl` is our collection of publishers):
+
+```javascript
+pubColl.fetchByIdQueueOfModels('authors');
+```
+
+This will fetch the authors with IDs 1, 2, 3 & 4 and add them to their related publishers appropriately.
+
+<a name="working-with-the-store" />
+## Working with the store - prevent duplicate data
+
+Backbone.JJStore acts as the big data store in your application which every newly created model registers itself at with its `id` and `storeIdentifier`. Each time a new model is created, all other models (which could be interested in a relationship to this new model) are informed of its creation. It's the same the other way round: Each time a mere ID is added to a relation, the store checks if there's already a model with the same id/storeIdentifier combination. If yes, the model from the store is used rather than the raw ID. 
+Naturally, all this can work only if there are no duplicates present. 
+This is what the configuration `Backbone.JJRelational.Config.work_with_store` (defaults to `true`) ensures.
+In JJRelational, when you create a new model with an existing storeIdentifier/id combination, __the existing model with updated attributes will be returned__.
+Let's clarify this with an example. 
+
+```javascript
+var a = new Author({ id: 1, firstname: "Jane", surname: "Doe" });
+console.log("a: cid is %s and name is %s %s", a.cid, a.get('firstname'), a.get('surname'));
+
+var b = new Author({ id: 1, surname: "Austen" });
+console.log("b: cid is %s and name is %s %s", b.cid, b.get('firstname'), b.get('surname'));
+```
+
+In a regular Backbone application, this would output:
+```
+>  a: cid is c1 and name is Jane Doe
+>  b: cid is c2 and name is undefined Austen
+```
+
+In JJRelational when `work_with_store` is set to `true`, the same logs would output: 
+```
+> a: cid is c1 and name is Jane Doe
+> b: cid is c1 and name is Jane Austen
+```
+
+Smash. The store realizes there's already an author with the same ID, so it merely updates the existing one.
+
+You can turn this behaviour off by setting `Backbone.JJRelational.Config.work_with_store` to `false`, however you should keep in mind that the synchronization of relations only works properly in __a duplicate-free environment__. 
 
 <a name="devil-in-the-details" />
 ## The Devil in the details
 
-The concept behind JJRelational is actually dirt-simple. On the creation of a model, it registers itself in `Backbone.JJStore`, and models that could be interested in that are notified of the creation. Because relations are defined from both sides, it's easy to keep everything in sync.
+The concept behind JJRelational is actually dirt-simple. On the creation of a model, it registers itself in `Backbone.JJStore`, and other models that could be interested in it are notified of the creation. Because relations are defined from both sides, it's easy to keep everything in sync.
 Basically it's just juggling with models and attributes.
-The following methods in JJRelational differ from Backbone core (see [reference](#reference)):
-- __Backbone.JJRelationalModel__
-	- `save`
-	- `set`
-	- `_validate`
-	- `toJSON`
-- __Backbone.Collection__
-	- `add`
-	- `update`
-	- `remove`
-	- `reset`
-	- `fetch`
-	
-<a name="why-another-relational-plugin" />
-## Why another relational plugin?
 
-[Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational) is very good.  
-But when we were working with it, one thing that bothered us, was that Backbone-relational doesn't support many-to-many relations in a way that suited our needs. You always have to use two `Backbone.HasMany` relations, with a link model in between.  
-Long story short: we found that too inconvenient, and tried to rewrite Paul Uithol's code, however ended up with this little rascal here.
-
-<a name="full-example" />
-## Full example
-
-@todo: link to full TodoExample
+Some of Backbone methods had to be wrapped within some relational methods.	
 
 ---
 
@@ -306,7 +422,10 @@ Long story short: we found that too inconvenient, and tried to rewrite Paul Uith
 
 ### Backbone.JJRelational
 #### `Config`
-( _Object_ ) Currently only stores `url_id_appendix` that is used for `fetchByIdQueue`- and `fetchByIdQueueOfModels`-calls. Default value is _'?ids='_ , the needed ids are then added comma separated. 
+( _Object_ ) Global configuration object.
+Possible values are:
+- `url_id_appendix`: used for `fetchByIdQueue`- and `fetchByIdQueueOfModels`-calls. Default value is _'?ids='_ , the needed ids are then added comma separated. 
+- `work_with_store`: Default is `true`. This option indicates whether you want Backbone.JJStore to prevent duplication of models. See [Working with the store](#working-with-the-store) for more information.
 
 #### `registerCollectionTypes (collTypes<Object>)`
 Registers one or many collection types, in order to build a correct collection instance for many-relations.
@@ -320,10 +439,11 @@ author.set({ publishers: [2, 3, publisherObj, { name: 'new publisher' }] });
 ```
 
 #### `save (key<String|Object>, value<mixed|Object>, options<Object>)`
-This overrides Backbone core's `save` method.  
+Backbone's original `save`-method wrapped in relational stuff. 
 The concept is: When saving a model, it is checked whether it has any relations containing a new model. If yes, the new model is saved first. When all new models have been saved, only then is the calling model saved.  
 Relational collections are saved as an array of models + idQueue.  
 Concerning relations, the `includeInJSON` property is used for serializing to JSON.
+See [Sync - saving and fetching data](#saving-and-fetching-data) for detailed information.
 
 #### `_validate (attrs<Object>, options<Object>)`
 The difference to Backbone core's `_validate` method is that this one flattens relational collections down to its model array. We've found that this is more convenient for more general validation functions.
@@ -336,11 +456,37 @@ If `isSave` is `false`, the related models are serialized regularly with their r
 Returns a JSON of the model with all relations represented only by ids.
 
 #### `fetchByIdQueue (relation<String|Object>, options<Object>)`
-Fetches missing models of a relation, if their ids are known.
+Fetches missing models of a relation, if their ids are known. See [Sync - saving and fetching data](#saving-and-fetching-data) for detailed information.
+
+### Backbone.Collection
+
+#### `fetchByIdQueue` (options<Object>)
+If any IDs are stored in the collection's idQueue, this method will fetch the missing models.
+
+#### `fetchByIdQueueOfModels (relation<String|Object>, options<Object>)`
+Sums up `fetchByIdQueue`-calls on the same relation in a whole collection by collection the idQueues of each model and firing a single request. The fetched models are automatically added to their appropriate relations.
+
+#### `getIDArray`
+Returns an array of the collection's models' IDs + any IDs stored within the collection's idQueue (if present)
+
 
 ---
+<a name="running-the-tests" />
+## Running the tests
 
+If you want to run the tests supplied, open up your terminal, change into the tests directory, run
+```
+$ npm update
+```
+once and then start the server with
+```
+$ node server.js
+```
+
+In your browser, navigate to [http://localhost:3000/tests.html](http://localhost:3000/tests.html). That's it.
+
+---
 <a name="license" />
 ## License
 
-MIT License / Do whatever the fuck you want to do license
+MIT
