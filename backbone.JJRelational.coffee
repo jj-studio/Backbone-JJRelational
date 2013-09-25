@@ -1,6 +1,6 @@
 ###*
  * Backbone JJRelational
- * v0.2.6
+ * v0.2.7
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -125,7 +125,7 @@ do () ->
 
 	Backbone.JJRelational = {}
 
-	Backbone.JJRelational.VERSION = '0.2.6'
+	Backbone.JJRelational.VERSION = '0.2.7'
 
 	Backbone.JJRelational.Config = {
 		url_id_appendix : '?ids='
@@ -471,11 +471,8 @@ do () ->
 			current = @.attributes
 			prev = @._previousAttributes
 
-			# Check for changes of `id`
-			if @.idAttribute of attrs then @.id = attrs[@.idAttribute]
-
-			# iterate over the attributes to set
-			for key, value of attrs
+			# actual setting
+			checkAndSet = (key, value) =>
 				if not _.isEqual current[key], value then changes.push key
 				if not _.isEqual prev[key], value then @.changed[key] = val else delete @.changed[key]
 				###*
@@ -495,12 +492,35 @@ do () ->
 				 * @end edit JJRelational
 				###
 
+			# Trigger all relevant attribute changes
+			triggerChanges = =>
+				if not silent
+					if changes.length then this._pending = true
+					for change in changes
+						@.trigger 'change:' + change, @, current[change], options
 
-			# Trigger all relevant attribute changes.
-			if not silent
-				if changes.length then this._pending = true
-				for change in changes
-					@.trigger 'change:' + change, @, current[change], options
+			# Check for changes of `id`
+			# If changed, we have to trigger `change:{idAttribute}` early, so that any
+			# collections can update their _byId lookups of this model
+			if @.idAttribute of attrs
+				@.id = attrs[@.idAttribute]
+				checkAndSet @.idAttribute, attrs[@.idAttribute]
+				# trigger early if necessary
+				triggerChanges()
+				# remove from changes to prevent triggering it twice
+				i = changes.indexOf @.idAttribute
+				if ~i then changes.splice i, 1
+				delete attrs[@.idAttribute]
+
+
+			# Check for changes of `id`
+			if @.idAttribute of attrs then @.id = attrs[@.idAttribute]
+
+			# iterate over the attributes to set
+			for key, value of attrs
+				checkAndSet key, value
+
+			triggerChanges()
 
 			if changing then return @
 			if not silent
