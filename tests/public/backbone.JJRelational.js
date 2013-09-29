@@ -48,17 +48,18 @@
   };
   /**
   	 * Adds a model to its store if it's not present yet.
-  	 * @param  {String} storeIdentifier              The store identifier
   	 * @param  {Backbone.JJRelationalModel} model    The model to register
   	 * @return {Boolean} true
   */
 
-  Backbone.JJStore.__registerModelInStore = function(storeIdentifier, model) {
+  Backbone.JJStore.__registerModelInStore = function(model) {
     var store;
-    store = this.__registerModelType(storeIdentifier);
-    if (!this.__modelExistsInStore(store, model)) {
-      store.add(model);
-      Backbone.JJStore.Events.trigger('added:' + storeIdentifier, model);
+    store = this.__registerModelType(model.storeIdentifier);
+    if (!store.get(model)) {
+      store.add(model, {
+        silent: true
+      });
+      Backbone.JJStore.Events.trigger('added:' + model.storeIdentifier, model);
     }
     return true;
   };
@@ -71,19 +72,6 @@
   Backbone.JJStore.__removeModelFromStore = function(model) {
     this.Models[model.storeIdentifier].remove(model);
     return true;
-  };
-  /**
-  	 * Checks if a model exists in a store.
-  	 * @param  {String | Array} store                 Store identifier or store array.
-  	 * @param  {Backbone.JJRelationalModel} model     The model to check.
-  	 * @return {Boolean}                              Found or not.
-  */
-
-  Backbone.JJStore.__modelExistsInStore = function(store, model) {
-    if (_.isString(store)) {
-      store = this.Models[store];
-    }
-    return _.contains(store, model);
   };
   Backbone.JJStore._byId = function(store, id) {
     if (_.isString(store)) {
@@ -194,7 +182,7 @@
       }
       Backbone.Model.apply(this, arguments);
       this.__prepopulate_rel_atts();
-      Backbone.JJStore.__registerModelInStore(this.storeIdentifier, this);
+      Backbone.JJStore.__registerModelInStore(this);
       this.__populate_rels_with_atts(attributes, options);
       Backbone.JJStore.Events.trigger('created:' + this.storeIdentifier, this);
       return this;

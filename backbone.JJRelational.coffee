@@ -53,15 +53,14 @@ do () ->
 
 	###*
 	 * Adds a model to its store if it's not present yet.
-	 * @param  {String} storeIdentifier              The store identifier
 	 * @param  {Backbone.JJRelationalModel} model    The model to register
 	 * @return {Boolean} true
 	###
-	Backbone.JJStore.__registerModelInStore = (storeIdentifier, model) ->
-		store = @.__registerModelType storeIdentifier
-		if not @.__modelExistsInStore store, model
-			store.add model
-			Backbone.JJStore.Events.trigger('added:' + storeIdentifier, model)
+	Backbone.JJStore.__registerModelInStore = (model) ->
+		store = @.__registerModelType model.storeIdentifier
+		if not store.get(model)
+			store.add model, { silent: true }
+			Backbone.JJStore.Events.trigger('added:' + model.storeIdentifier, model)
 		true
 
 	###*
@@ -72,16 +71,6 @@ do () ->
 	Backbone.JJStore.__removeModelFromStore = (model) ->
 		@.Models[model.storeIdentifier].remove model
 		true
-
-	###*
-	 * Checks if a model exists in a store.
-	 * @param  {String | Array} store                 Store identifier or store array.
-	 * @param  {Backbone.JJRelationalModel} model     The model to check.
-	 * @return {Boolean}                              Found or not.
-	###
-	Backbone.JJStore.__modelExistsInStore = (store, model) ->
-		if _.isString store then store = @.Models[store]
-		_.contains store, model
 
 	## Convenience functions
 
@@ -196,7 +185,7 @@ do () ->
 			# set up the relational attributes
 			@.__prepopulate_rel_atts()
 			# put in store
-			Backbone.JJStore.__registerModelInStore @.storeIdentifier, @
+			Backbone.JJStore.__registerModelInStore @
 			# populate relations with attributes
 			@.__populate_rels_with_atts(attributes, options)
 			# trigger the creation
