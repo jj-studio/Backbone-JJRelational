@@ -1,6 +1,6 @@
 ###*
  * Backbone JJRelational
- * v0.2.7
+ * v0.2.8
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -16,11 +16,14 @@ do () ->
 	if typeof window is 'undefined'
 		_ = require 'underscore'
 		Backbone = require 'backbone' 
-		exports = module.exports = Backbone
+		exports = Backbone
+		typeof module is 'undefined' || (module.exports = exports)
 	else
 		_ = window._
 		Backbone = window.Backbone
 		exports = window
+
+	that = @
 
 	# !-
 	# ! Backbone.JJStore
@@ -42,10 +45,10 @@ do () ->
 	###*
 	 * Adds a store for the given `storeIdentifier` if one doesn't exist yet.
 	 * @param  {String} storeIdentifier
-	 * @return {Array}                              The matching store array
+	 * @return {Backbone.Collection}                 The matching store array
 	###
 	Backbone.JJStore.__registerModelType = (storeIdentifier) ->
-		@.Models[storeIdentifier] = [] unless @.Models[storeIdentifier]
+		@.Models[storeIdentifier] = new Backbone.Collection() unless @.Models[storeIdentifier]
 		@.Models[storeIdentifier]
 
 	###*
@@ -57,7 +60,7 @@ do () ->
 	Backbone.JJStore.__registerModelInStore = (storeIdentifier, model) ->
 		store = @.__registerModelType storeIdentifier
 		if not @.__modelExistsInStore store, model
-			store.push model
+			store.add model
 			Backbone.JJStore.Events.trigger('added:' + storeIdentifier, model)
 		true
 
@@ -67,11 +70,7 @@ do () ->
 	 * @return {Boolean} true
 	###
 	Backbone.JJStore.__removeModelFromStore = (model) ->
-		store = @.Models[model.storeIdentifier]
-		_.find store, (m, i) ->
-			if m is model
-				store.splice i,1
-				return true
+		@.Models[model.storeIdentifier].remove model
 		true
 
 	###*
@@ -84,32 +83,13 @@ do () ->
 		if _.isString store then store = @.Models[store]
 		_.contains store, model
 
-	###*
-	 * Returns a model from the store by a specific attribute
-	 * @param  {String | Array} store                 Store identifier or store array.
-	 * @param  {String} propName                      Property/attribute name
-	 * @param  {mixed} propValue                      Property/attribute value
-	 * @param  {Boolean} useAttributes = false        If true, model.attributes will be searched, if false, just model.
-	 * @return {Backbone.JJRelationalModel}           The found model (if not found, `null` will be returned)
-	###
-	Backbone.JJStore.getModelByProperty = (store, propName, propValue, useAttributes) ->
-		if _.isString store then store = @.Models[store]
-		returnModel = undefined
-		if store
-			returnModel = _.find store, (m, i) ->
-				toUse = m
-				if useAttributes then toUse = toUse.attributes
-				if toUse[propName] is propValue
-					return true
-		returnModel
-
 	## Convenience functions
 
 	Backbone.JJStore._byId = (store, id) ->
-		@.getModelByProperty store, 'id', id, false
-
-	Backbone.JJStore._byCid = (store, cid) ->
-		@.getModelByProperty store, 'cid', cid, false
+		if _.isString store then store = @.Models[store]
+		if store
+			return store.get id
+		null
 
 
 	# !-
@@ -125,7 +105,7 @@ do () ->
 
 	Backbone.JJRelational = {}
 
-	Backbone.JJRelational.VERSION = '0.2.7'
+	Backbone.JJRelational.VERSION = '0.2.8'
 
 	Backbone.JJRelational.Config = {
 		url_id_appendix : '?ids='
@@ -612,7 +592,7 @@ do () ->
 						json[relation.key] = relValue.toJSON {withRelIDs: true}
 
 			if options.scaffold
-				json = _.pick.apply window, [json, options.scaffold]
+				json = _.pick.apply that, [json, options.scaffold]
 
 			json
 
@@ -1163,7 +1143,7 @@ do () ->
 					existingModel.set respObj, options
 					existingModels.push existingModel
 					args.push respObj
-			parsedResp = _.without.apply window, args
+			parsedResp = _.without.apply that, args
 
 			# now that we've got everything together, check if to call 'reset' or 'update' and especially check if this is a relational collection
 			# if yes, and 'reset', cleanup the whole collection, and ignore the owner model.
@@ -1231,7 +1211,7 @@ do () ->
 	Backbone.Collection.prototype.removeFromIdQueue = (ids) ->
 		ids = if _.isArray then ids else [ids]
 		args = [@._relational.idQueue].concat ids
-		@._relational.idQueue = _.without.apply window, args
+		@._relational.idQueue = _.without.apply that, args
 		@
 
 	###*

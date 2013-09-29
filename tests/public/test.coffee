@@ -7,6 +7,30 @@ assert = chai.assert
 it 'BackboneJJRelational should be present', ->
 	should.exist Backbone.JJRelational
 
+A = Backbone.JJRelationalModel.extend
+	storeIdentifier: 'A'
+	relations: [
+		{
+			type: 'many_many'
+			relatedModel: 'B',
+			key: 'bs',
+			reverseKey: 'as'
+		}
+	]
+
+B = Backbone.JJRelationalModel.extend
+	storeIdentifier: 'B'
+	relations: [
+		{
+			type: 'many_many'
+			relatedModel: 'A',
+			key: 'as',
+			reverseKey: 'bs'
+		}
+	]
+
+##
+
 Author = Backbone.JJRelationalModel.extend
 	storeIdentifier: 'Author'
 	urlRoot: 'api/Author'
@@ -95,10 +119,13 @@ Backbone.JJRelational.registerCollectionTypes
 
 describe 'Backbone JJStore', ->
 	b = new Book { title: 'Harry Potter', id: 999 }
+	a = new A {id: 'foobar'}
 	it 'should find Harry Potter _byId', ->
 		Backbone.JJStore._byId('Book', b.id).get('title').should.equal 'Harry Potter'
-	it 'should find Harry Potter by title', ->
-		Backbone.JJStore.getModelByProperty('Book', 'title', 'Harry Potter', true).get('title').should.equal 'Harry Potter'
+	it 'should remove model from store without problems', ->
+		console.log Backbone.JJStore._byId('A', 'foobar')
+		Backbone.JJStore.__removeModelFromStore a
+		should.not.exist Backbone.JJStore._byId('A', 'foobar')
 
 describe 'New author', ->
 	a = new Author()
