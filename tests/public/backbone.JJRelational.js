@@ -353,12 +353,14 @@
       }
       relModelsToSave = [];
       checkIfNew = function(val) {
-        if (val && (val instanceof Backbone.JJRelationalModel) && val.isNew()) {
-          return relModelsToSave.push({
-            model: val,
-            done: false
-          });
-        }
+        try {
+          if (val && (val instanceof Backbone.JJRelationalModel) && val.url() && val.isNew()) {
+            return relModelsToSave.push({
+              model: val,
+              done: false
+            });
+          }
+        } catch (_error) {}
       };
       checkAndContinue = function() {
         var done, obj, _i, _len;

@@ -25,6 +25,7 @@ A = Backbone.JJRelationalModel.extend({
 
 B = Backbone.JJRelationalModel.extend({
   storeIdentifier: 'B',
+  urlRoot: '/api/B',
   relations: [
     {
       type: 'many_many',
@@ -401,6 +402,32 @@ describe('Saving', function() {
           return done();
         }
       }
+    });
+  });
+});
+
+describe('Testing url property', function() {
+  var a, w;
+  a = new Author({
+    name: 'foobar'
+  });
+  it('Should save the author and treat model A as mere JSON', function(done) {
+    a.set('a', new A({
+      foo: 'bar'
+    }));
+    return a.save(null, {
+      success: function() {
+        return done();
+      }
+    });
+  });
+  w = new Wife({
+    title: 'foobar2'
+  });
+  return it('Should treat the As as pure JSON', function(done) {
+    a.set('wife', w);
+    return a.save(null, {
+      success: done()
     });
   });
 });
