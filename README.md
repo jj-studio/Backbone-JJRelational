@@ -14,7 +14,7 @@ __________                __   ___.
                            \/     \/          \/                    \/     \/      
 ```
 
-### Version 0.2.8
+### Version 0.2.9
 
 __Backbone JJRelational__ is a plugin that provides __one-to-one, one-to-many, many-to-one and many-to-many__ bi-directional relations between Backbone models.  
   

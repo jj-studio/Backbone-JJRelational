@@ -1,6 +1,6 @@
 ###*
  * Backbone JJRelational
- * v0.2.8
+ * v0.2.9
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -316,7 +316,7 @@ do () ->
 				if not options.contentType then options.contentType = 'application/json'
 				
 				if not options.data then options.data = JSON.stringify(@.toJSON({isSave: true}))
-
+				
 				if options.parse is undefined then options.parse = true
 				
 				options.success = (resp, status, xhr) =>
@@ -352,7 +352,8 @@ do () ->
 
 			# checks if a model is new
 			checkIfNew = (val) ->
-				if val and (val instanceof Backbone.JJRelationalModel) and val.isNew() then relModelsToSave.push({model: val, done: false})
+				try
+					if val and (val instanceof Backbone.JJRelationalModel) and val.url() and val.isNew() then relModelsToSave.push({model: val, done: false})
 			# checks if all models have been saved. if yes, do the "`actualSave`"
 			checkAndContinue = ->
 				if _.isEmpty relModelsToSave then returnXhr = actualSave()
