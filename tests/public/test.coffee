@@ -20,6 +20,7 @@ A = Backbone.JJRelationalModel.extend
 
 B = Backbone.JJRelationalModel.extend
 	storeIdentifier: 'B'
+	urlRoot: '/api/B'
 	relations: [
 		{
 			type: 'many_many'
@@ -258,6 +259,26 @@ describe 'Saving', ->
 		fontane.save null,
 			success: ->
 				if irrungen.id and irrungen.get('author').id is fontane.id then done()
+
+describe 'Testing url property', ->
+	a = new Author { name: 'foobar' }
+
+	it 'Should save the author and treat model A as mere JSON', (done) ->
+		a.set 'a', new A({foo: 'bar'})
+		a.save null,
+			success: ->
+				done()
+
+	w = new Wife { title: 'foobar2' }
+
+	it 'Should treat the As as pure JSON', (done) ->
+		a.set 'wife', w
+
+		a.save null,
+			success:
+				done() 
+
+
 
 describe 'Fetching', ->
 	authColl = new AuthorsColl()
