@@ -319,6 +319,7 @@
             isSave: true
           }));
         }
+        console.log(options.data);
         if (options.parse === void 0) {
           options.parse = true;
         }
