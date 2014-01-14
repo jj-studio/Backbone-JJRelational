@@ -29,7 +29,7 @@ Backbone JJRelational has been tested with Backbone 1.0.0 and Underscore 1.5.0
 - [Setup example](#setup-example)
 - [Getting and setting data](#getting-and-setting-data)
 - [Sync - saving and fetching data](#saving-and-fetching-data)
-- [Working with the store - prevent duplice data](#working-with-the-store)
+- [Working with the store - prevent duplicate data](#working-with-the-store)
 - [The devil in the details](#devil-in-the-details)
 - [Reference](#reference)
 - [Running the tests](#running-the-tests)
@@ -328,7 +328,7 @@ And now, at last, the publisher will be saved:
 ```
 ### Fetching
 
-When fetching data from the server, Backbone.JJRelational automatically creates the needed models in a relation. Image we would call `fetch` on a collection of publishers and it would return:
+When fetching data from the server, Backbone.JJRelational automatically creates the needed models in a relation. Imagine we would call `fetch` on a collection of publishers and it would return:
 
 ```json
 [
