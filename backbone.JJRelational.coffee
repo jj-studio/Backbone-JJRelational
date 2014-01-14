@@ -94,7 +94,7 @@ do () ->
 
 	Backbone.JJRelational = {}
 
-	Backbone.JJRelational.VERSION = '0.2.8'
+	Backbone.JJRelational.VERSION = '0.2.9'
 
 	Backbone.JJRelational.Config = {
 		url_id_appendix : '?ids='
