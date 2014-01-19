@@ -39,6 +39,7 @@ do () ->
 	# Basic setup
 	
 	Backbone.JJStore = {}
+	Backbone.JJStore._modelScopes = [exports];
 	Backbone.JJStore.Models = {}
 	Backbone.JJStore.Events = _.extend {}, Backbone.Events
 
@@ -80,6 +81,20 @@ do () ->
 			return store.get id
 		null
 
+	###*
+	 * Adds a scope for `getObjectByName` to look for model types by name.
+	 * @param {Object} scope
+	###
+	Backbone.JJStore.addModelScope = (scope) ->
+		@._modelScopes.push scope
+  
+	###*
+	 * Removes a model scope
+	 * @param {Object} scope
+	###
+	Backbone.JJStore.removeModelScope = (scope) ->
+		@._modelScopes = _.without @._modelScopes, scope
+  
 
 	# !-
 	# ! Backbone JJRelationalModel
@@ -109,17 +124,20 @@ do () ->
 
 
 	###*
-	 * Find a type on the global object by name. Splits name on dots.
-	 * (i.e. 'Store.Models.MyModel' will return exports['Store']['Models']['MyModel'])
-	 * @param  {String} name                           Name to look for
-	 * @return {mixed}                                 Global var
+	 * Find a model type on one of the modelScopes by name. Names are split on dots.
+	 * @param  {String} name                           
+	 * @return {mixed}                                 
 	###
 	Backbone.JJRelational.__getObjectByName = (name) ->
-		type = _.reduce name.split('.'), (memo, val) ->
-			memo[val]
-		, exports
-
-		if type isnt exports then return type else return null
+	  parts = name.split('.')
+	  type = null
+	  _.find Backbone.JJStore._modelScopes, ((scope) ->
+	    type = _.reduce(parts or [], (memo, val) ->
+	      (if memo then memo[val] else `undefined`)
+	    , scope)
+	    true  if type and type isnt scope
+	  ), this
+	  type
 
 	###*
 	 * Registers one or many collection-types, in order to build a correct collection instance for many-relations.
