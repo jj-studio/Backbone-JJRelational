@@ -7,6 +7,9 @@ assert = chai.assert
 it 'BackboneJJRelational should be present', ->
 	should.exist Backbone.JJRelational
 
+
+##
+
 A = Backbone.JJRelationalModel.extend
 	storeIdentifier: 'A'
 	relations: [
@@ -30,7 +33,13 @@ B = Backbone.JJRelationalModel.extend
 		}
 	]
 
+
+
 ##
+
+Literature = {}
+
+Backbone.JJStore.addModelScope Literature
 
 Author = Backbone.JJRelationalModel.extend
 	storeIdentifier: 'Author'
@@ -61,7 +70,7 @@ Author = Backbone.JJRelationalModel.extend
 		}
 	]
 
-Wife = Backbone.JJRelationalModel.extend
+Literature.Wife = Backbone.JJRelationalModel.extend
 	storeIdentifier: 'Wife'
 	relations: [
 		{
@@ -141,7 +150,7 @@ describe 'New author', ->
 describe 'Testing setting/adding/removing from relations', ->
 	orwell = new Author {name: 'George Orwell' }
 	describe 'HasOne Relation', ->
-		eileen = new Wife { name: 'Eileen' }
+		eileen = new Literature.Wife { name: 'Eileen' }
 		orwell.set { wife: eileen }
 
 		it 'Adding Eileen to Orwell: Eileen should have George Orwell as husband', ->
@@ -150,7 +159,7 @@ describe 'Testing setting/adding/removing from relations', ->
 			eileen.set { husband: null }
 			orwell.attributes.should.have.property 'wife', null
 		it 'Adding a wife ID to Orwell should sync', ->
-			w = new Wife { name: 'Some random hoe', id: 1000 }
+			w = new Literature.Wife { name: 'Some random hoe', id: 1000 }
 			orwell.set {wife: 1000}
 			orwell.get('wife').get('name').should.equal 'Some random hoe'
 
@@ -269,7 +278,7 @@ describe 'Testing url property', ->
 			success: ->
 				done()
 
-	w = new Wife { title: 'foobar2' }
+	w = new Literature.Wife { title: 'foobar2' }
 
 	it 'Should treat the As as pure JSON', (done) ->
 		a.set 'wife', w

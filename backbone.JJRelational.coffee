@@ -1,6 +1,6 @@
 ###*
  * Backbone JJRelational
- * v0.2.9
+ * v0.2.10
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -39,7 +39,7 @@ do () ->
 	# Basic setup
 	
 	Backbone.JJStore = {}
-	Backbone.JJStore._modelScopes = [exports];
+	Backbone.JJStore._modelScopes = [exports]
 	Backbone.JJStore.Models = {}
 	Backbone.JJStore.Events = _.extend {}, Backbone.Events
 
@@ -109,7 +109,7 @@ do () ->
 
 	Backbone.JJRelational = {}
 
-	Backbone.JJRelational.VERSION = '0.2.9'
+	Backbone.JJRelational.VERSION = '0.2.10'
 
 	Backbone.JJRelational.Config = {
 		url_id_appendix : '?ids='
@@ -131,12 +131,12 @@ do () ->
 	Backbone.JJRelational.__getObjectByName = (name) ->
 	  parts = name.split('.')
 	  type = null
-	  _.find Backbone.JJStore._modelScopes, ((scope) ->
+	  _.find Backbone.JJStore._modelScopes, (scope) ->
 	    type = _.reduce(parts or [], (memo, val) ->
-	      (if memo then memo[val] else `undefined`)
+	      if memo then memo[val] else undefined
 	    , scope)
 	    true  if type and type isnt scope
-	  ), this
+	  , @
 	  type
 
 	###*
