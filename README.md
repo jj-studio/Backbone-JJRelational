@@ -79,6 +79,16 @@ Possible values are
 _mandatory_  
 Same as in [Paul Uithol](https://github.com/PaulUithol)'s [Backbone-relational](https://github.com/PaulUithol/Backbone-relational), this is a string which can be resolved to an object type on the global scope, or a reference to a `Backbone.JJRelationalModel` type.
 This - of course - defines which kind of model fills this relation.
+  
+  
+Since 0.2.10 you also have the possibility to register a scope which will be searched by using `Backbone.JJStore.addModelScope`, for example:
+```javascript
+Literature = {}
+Literature.Author = Backbone.JJRelationalModel.extend({ ... });
+Backbone.JJStore.addModelScope(Literature);
+```
+
+Thus, specifying a relation with `relatedModel: 'Author'` will look for the Author model type not only on the global scope, but also in the Literature-object.
 
 #### key
 _mandatory_  
