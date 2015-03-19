@@ -715,8 +715,8 @@ do () ->
 			prev = @.get relation.key
 			@.attributes[relation.key] = val
 
-			if silentRelation then return
 			if prev instanceof relation.relatedModel is true then prev.removeFromRelation relation.reverseKey, @, true
+			if silentRelation then return
 			if val instanceof relation.relatedModel is true
 				# pass on relation
 				val.addToRelation @, relation.reverseKey, true
