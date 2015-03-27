@@ -1339,7 +1339,7 @@
         existingModel = Backbone.JJStore._byId(storeIdentifier, id);
         if (existingModel) {
           existingModel.set(respObj, options);
-          existingModels.push(existingModel);
+          existingModels.push(existingModel.pick(_.keys(respObj).concat(existingModel.idAttribute)));
           args.push(respObj);
         }
       }
