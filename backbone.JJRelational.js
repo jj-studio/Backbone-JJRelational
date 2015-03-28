@@ -813,11 +813,11 @@
       }
       prev = this.get(relation.key);
       this.attributes[relation.key] = val;
-      if (silentRelation) {
-        return;
-      }
       if (prev instanceof relation.relatedModel === true) {
         prev.removeFromRelation(relation.reverseKey, this, true);
+      }
+      if (silentRelation) {
+        return;
       }
       if (val instanceof relation.relatedModel === true) {
         val.addToRelation(this, relation.reverseKey, true);

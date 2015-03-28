@@ -150,8 +150,22 @@ describe 'New author', ->
 describe 'Testing setting/adding/removing from relations', ->
 	orwell = new Author {name: 'George Orwell' }
 	describe 'HasOne Relation', ->
+
 		eileen = new Literature.Wife { name: 'Eileen' }
 		orwell.set { wife: eileen }
+
+    it 'When an Author adds a Book to its `books` list, the Book should be removed from all other Authors `books` list', ->
+      author1 = new Author(name: 'Author1')
+      author2 = new Author(name: 'Author2')
+      book1 = new Book(name: 'Book1')
+
+      author1.get('books').add book1
+      author1.get('books').contains(book1).should.equal true
+      author2.get('books').contains(book1).should.equal false
+
+      author2.get('books').add book1
+      author1.get('books').contains(book1).should.equal false
+      author2.get('books').contains(book1).should.equal true
 
 		it 'Adding Eileen to Orwell: Eileen should have George Orwell as husband', ->
 			eileen.get('husband').get('name').should.equal 'George Orwell'
