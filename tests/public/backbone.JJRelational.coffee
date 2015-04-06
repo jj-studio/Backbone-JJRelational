@@ -1149,7 +1149,7 @@ do () ->
 				if existingModel
 					# this model exists. add it to existingModels[] and simply update the attributes as in 'fetch'
 					existingModel.set respObj, options
-					existingModels.push existingModel
+					existingModels.push existingModel.pick(_.keys(respObj).concat(existingModel.idAttribute))
 					args.push respObj
 			parsedResp = _.without.apply that, args
 
