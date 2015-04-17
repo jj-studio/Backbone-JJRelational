@@ -364,6 +364,7 @@
         method = _this.isNew() ? 'create' : (options.patch ? 'patch' : 'update');
         if (method === 'patch') {
           options.attrs = attrs;
+          delete options.data;
         }
         xhr = _this.sync(method, _this, options);
         if (attrs && options.wait) {

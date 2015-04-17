@@ -351,7 +351,9 @@ do () ->
 				wrapError @, options
 
 				method = if @.isNew() then 'create' else (if options.patch then 'patch' else 'update')
-				if method is 'patch' then options.attrs = attrs
+				if method is 'patch'
+					options.attrs = attrs
+					delete options.data
 				xhr = @.sync method, @, options
 				
 				# Restore attributes
