@@ -208,6 +208,7 @@
       Backbone.JJStore.__registerModelInStore(this);
       this.__populate_rels_with_atts(attributes, options);
       Backbone.JJStore.Events.trigger('created:' + this.storeIdentifier, this);
+      this.trigger('relationsInstalled');
       return this;
     },
     /**

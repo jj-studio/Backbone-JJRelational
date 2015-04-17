@@ -208,6 +208,7 @@ do () ->
 			@.__populate_rels_with_atts(attributes, options)
 			# trigger the creation
 			Backbone.JJStore.Events.trigger 'created:' + @.storeIdentifier, @
+      @.trigger('relationsInstalled')
 			@
 
 		###*
