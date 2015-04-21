@@ -1,6 +1,6 @@
 ###*
  * Backbone JJRelational
- * v0.2.10
+ * v0.2.11
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -109,7 +109,7 @@ do () ->
 
 	Backbone.JJRelational = {}
 
-	Backbone.JJRelational.VERSION = '0.2.10'
+	Backbone.JJRelational.VERSION = '0.2.11'
 
 	Backbone.JJRelational.Config = {
 		url_id_appendix : '?ids='
@@ -208,7 +208,7 @@ do () ->
 			@.__populate_rels_with_atts(attributes, options)
 			# trigger the creation
 			Backbone.JJStore.Events.trigger 'created:' + @.storeIdentifier, @
-      @.trigger('relationsInstalled')
+			@.trigger('relationsInstalled')
 			@
 
 		###*
