@@ -14,7 +14,7 @@ __________                __   ___.
                            \/     \/          \/                    \/     \/      
 ```
 
-### Version 0.2.10
+### Version 0.2.11
 
 __Backbone JJRelational__ is a plugin that provides __one-to-one, one-to-many, many-to-one and many-to-many__ bi-directional relations between Backbone models.  
   
@@ -205,7 +205,10 @@ Backbone.JJRelational.registerCollectionTypes({
 	'Publishers': PublishersColl
 });
 
-```
+```  
+
+Once a new instance of a relational model has been created, a `relationsInstalled` event is emitted on the model.
+
 <a name="getting-and-setting-data" />
 ## Getting and setting data
 
