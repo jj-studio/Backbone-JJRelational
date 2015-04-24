@@ -58,9 +58,13 @@ do () ->
    * @return {Boolean} true
   ###
   Backbone.JJStore.__registerModelInStore = (model) ->
+    # keep track of the model's original collection property so we can reset it,
+    # because our call to store.add would stomp it
+    originalCollection = model.collection
     store = @.__registerModelType model.storeIdentifier
     if not store.get(model)
       store.add model, { silent: true }
+      model.collection = originalCollection
       Backbone.JJStore.Events.trigger('added:' + model.storeIdentifier, model)
     true
 

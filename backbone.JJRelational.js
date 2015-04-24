@@ -56,12 +56,14 @@
      * @return {Boolean} true
      */
     Backbone.JJStore.__registerModelInStore = function(model) {
-      var store;
+      var originalCollection, store;
+      originalCollection = model.collection;
       store = this.__registerModelType(model.storeIdentifier);
       if (!store.get(model)) {
         store.add(model, {
           silent: true
         });
+        model.collection = originalCollection;
         Backbone.JJStore.Events.trigger('added:' + model.storeIdentifier, model);
       }
       return true;
