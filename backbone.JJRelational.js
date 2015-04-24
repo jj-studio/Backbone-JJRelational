@@ -495,7 +495,7 @@
               changes.push(key);
             }
             if (!_.isEqual(prev[key], value)) {
-              _this.changed[key] = val;
+              _this.changed[key] = value;
             } else {
               delete _this.changed[key];
             }
