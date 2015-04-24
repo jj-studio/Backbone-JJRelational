@@ -523,6 +523,8 @@
                 }
               }
               return results;
+            } else if (isRelation) {
+              return _this;
             } else {
               if (unset) {
                 return delete current[key];

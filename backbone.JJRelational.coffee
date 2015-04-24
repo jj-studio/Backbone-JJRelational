@@ -492,6 +492,8 @@ do () ->
           for v in value
             # check the value and add it to the relation accordingly
             @.checkAndAdd(v, relation, options) unless unset
+        else if isRelation
+          @
         else
           if unset then delete current[key] else current[key] = value
         ###*
