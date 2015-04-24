@@ -997,6 +997,12 @@ do () ->
               idsToAdd.push model
               break
           else
+            # assume that the user wants a reverse key set to the relational owner
+            # (but _.extend it if course, in case they passed in their own)
+            if @_relational and @_relational.reverseKey and @_relational.owner
+              relAttrs = {}
+              relAttrs[@_relational.reverseKey] = @_relational.owner
+              model = _.extend(relAttrs, model)
             model = @._prepareModel model, options
 
         # check if models are instances of this collection's model
