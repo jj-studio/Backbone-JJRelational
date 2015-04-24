@@ -462,19 +462,38 @@ do () ->
 
       # actual setting
       checkAndSet = (key, value) =>
-        if not _.isEqual current[key], value then changes.push key
-        if not _.isEqual prev[key], value then @.changed[key] = value else delete @.changed[key]
+        # if we are trying to set a relation key, simply ignore it
+        # it will be handled below when we decide to empty the relation (or not)
+        if !_.contains(_.pluck(@.relations, 'key'), key)
+          if !_.isEqual(current[key], value)
+            changes.push key
+          if !_.isEqual(prev[key], value)
+            @.changed[key] = value
+          else
+            delete @.changed[key]
         ###*
          * @begin edit JJRelational
         ###
         # check if it's a relation that is to be set
-        if (relation = @.getRelationByKey key) and @.relationsInstalled
+        relation = @.getRelationByKey(key)
+        isRelation = @.relationsInstalled and relation
+        currValue = @.get(key)
+        shouldRefreshRelation = isRelation and (unset or
+                                               (currValue == null) or
+                                               (_.isNumber(currValue) and _.isNumber(value) and currValue != value) or
+                                               (!_.isObject(value) and _.isObject(currValue) and currValue.id != value) or
+                                               (value instanceof Backbone.Model and value.cid != currValue.cid))
+        if shouldRefreshRelation
+          # we ignored adding changes in `checkAndSet`, so we have to add it now
+          changes.push key
           # if yes, empty relation
           @._emptyRelation relation
           value = if _.isArray value then value else [value]
           for v in value
             # check the value and add it to the relation accordingly
             @.checkAndAdd(v, relation, options) unless unset
+        else if isRelation
+          @
         else
           if unset then delete current[key] else current[key] = value
         ###*
