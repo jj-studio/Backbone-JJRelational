@@ -334,7 +334,7 @@ do () ->
         # use `includeInJSON` for relations
         if not options.contentType then options.contentType = 'application/json'
 
-        if not options.data then options.data = JSON.stringify(@.toJSON({isSave: true}))
+        if not options.data then options.data = JSON.stringify(@toJSON(_.extend({}, options, isSave: true)))
 
         if options.parse is undefined then options.parse = true
 
