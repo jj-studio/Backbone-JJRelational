@@ -328,6 +328,11 @@ do () ->
       # Set temporary attributes if `{wait: true}`
       if attrs and options.wait then @.attributes = _.extend({}, attributes, attrs)
 
+      # we're going to keep two lists, one of models to save before, and one of models to save after
+      origOptions = _.clone options
+      relModelsToSaveAfter = []
+      relModelsToSaveBefore = []
+
       #
       # This is the actual save function that's called when all the new related models have been saved
       #
@@ -343,6 +348,16 @@ do () ->
         if options.parse is undefined then options.parse = true
 
         options.success = (resp, status, xhr) =>
+          # we're in the actualSave success function, so now let's invoke a save on our "after" models
+          # the success callback we're going to pass is this function, so the next model in the relModelsToSaveAfter list
+          # won't be saved until the previous model has finished saving itself and all of its before/after dependencies
+          # we could probably analyze this dependency graph more to be more performant...maybe someday.
+          saveRelModelsAfterSuccess = =>
+            if relModelsToSaveAfter.length > 0
+              relModel = relModelsToSaveAfter.shift()
+              if relModel.isNew() then relModel.save({}, _.extend({}, origOptions, {success: saveRelModelsAfterSuccess}))
+          saveRelModelsAfterSuccess()
+
           # Ensure attribtues are restored during synchronous saves
           @attributes = attributes
 
@@ -371,17 +386,21 @@ do () ->
 
       # we need an array that stores models which must be ignored to prevent double saving...
       if not options.ignoreSaveOnModels then options.ignoreSaveOnModels = [@]
-      relModelsToSave = []
 
       # checks if a model is new
-      checkIfNew = (val) ->
+      checkIfNew = (val, saveAfter) ->
         try
-          if val and (val instanceof Backbone.JJRelationalModel) and val.url() and val.isNew() then relModelsToSave.push({model: val, done: false})
+          if val and (val instanceof Backbone.JJRelationalModel) and val.url() and val.isNew()
+            if saveAfter
+              relModelsToSaveAfter.push model
+            else
+              relModelsToSaveBefore.push({model: val, done: false})
+
       # checks if all models have been saved. if yes, do the "`actualSave`"
       checkAndContinue = ->
-        if _.isEmpty relModelsToSave then returnXhr = actualSave()
+        if _.isEmpty relModelsToSaveBefore then returnXhr = actualSave()
         done = true
-        for obj in relModelsToSave
+        for obj in relModelsToSaveBefore
           if obj.done is false then done = false
         if done then returnXhr = actualSave()
 
@@ -389,17 +408,22 @@ do () ->
       if @.relations
         for relation in @.relations
           val = @.get relation.key
-          if isOneType relation
-            checkIfNew val
+          reverseRelation = if (val instanceof Backbone.Collection && val.first()) then _.findWhere(val.first().relations, {key: relation.reverseKey}) else null
+
+          if reverseRelation && isManyType(relation) && isOneType(reverseRelation)
+            for model in val.models
+              checkIfNew model, true
           else if isManyType relation
             for model in val.models
-              checkIfNew model
+              checkIfNew model, false
+          else if isOneType relation
+            checkIfNew val, false
 
       # if we don't have any relational models to save, directly go to "`actualSave`"
-      if _.isEmpty relModelsToSave then returnXhr = actualSave()
+      if _.isEmpty relModelsToSaveBefore then returnXhr = actualSave()
 
       # save every relational model that needs saving and add it to the `ignoreSaveOnModel` option.
-      for obj in relModelsToSave
+      for obj in relModelsToSaveBefore
         if _.indexOf(options.ignoreSaveOnModels, obj.model) <= -1
           # add to options.ignoreSaveModels to avoid multiple saves on the same model
           options.ignoreSaveOnModels.push obj.model
@@ -407,7 +431,7 @@ do () ->
           opts = _.clone options
 
           opts.success = (model, resp) ->
-            for obj in relModelsToSave
+            for obj in relModelsToSaveBefore
               if obj.model.cid is model.cid then obj.done = true
 
             # trigger on JJStore.Events

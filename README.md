@@ -303,10 +303,19 @@ var author = new Author({books: [{title: 'a book'}]}); // works fine!
 <a name="saving-and-fetching-data" />
 ## Sync - saving and fetching data
 
-### Saving
+### Saving (part 1)
 
 Backbone.JJRelational handles everything for you automatically. Nevertheless, this section should explain some of the concepts and possibilities you have when fetching from/persisting to the server.
-When calling __save__ on a model, the `includeInJSON` property you defined for the relation is used to generate the JSON which gets persisted to the server. Going further, it is checked for you if a related model is new: If yes, the related model __gets saved before__! Confused? This example should make your head spin even more:
+
+When calling __save__ on a model, the `includeInJSON` property you defined for the relation is used to generate the JSON which gets persisted to the server. Going further, it is checked for you if a related model is new: If yes, the related model __gets saved too__!
+
+When you call `save` on a `Backbone.JJRelationalModel`, it will walk through that model's relations. If the model `has_one` of something that `has_many` of it (like a Stores -> Products relationship), then the parent model (Store) will be saved __first__! Otherwise, the related model will be saved first.
+
+Assume that a Store `has_many` Products, and Product `has_one` Store. You call `store.save()` ... So the Store will save itself first. After this completes, the Product's `save` will be called.
+
+It should be noted that these related models will only be saved before/after if the model `isNew()`. If these are existing models, then you should save them each yourself individually.
+
+### Saving (part 2)
 
 ```javascript
 // We pretend our relational setup is the same as in the setup example.
@@ -339,6 +348,7 @@ And now, at last, the publisher will be saved:
 	"authors": [1]
 }
 ```
+
 ### Fetching
 
 When fetching data from the server, Backbone.JJRelational automatically creates the needed models in a relation. Imagine we would call `fetch` on a collection of publishers and it would return:
