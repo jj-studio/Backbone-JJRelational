@@ -542,7 +542,9 @@
             if (shouldRefreshRelation) {
               changes.push(key);
               _this.changed[key] = value;
-              _this._emptyRelation(relation);
+              if (!(currValue instanceof Backbone.Collection)) {
+                _this._emptyRelation(relation);
+              }
               value = _.isArray(value) ? value : [value];
               for (j = 0, len = value.length; j < len; j++) {
                 v = value[j];
