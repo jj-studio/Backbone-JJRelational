@@ -514,6 +514,7 @@ do () ->
         if shouldRefreshRelation
           # we ignored adding changes in `checkAndSet`, so we have to add it now
           changes.push key
+          @.changed[key] = value
           # if yes, empty relation
           @._emptyRelation relation
           value = if _.isArray value then value else [value]

@@ -540,6 +540,7 @@
             shouldRefreshRelation = isRelation && (unset || (currValue === null) || (_.isNumber(currValue) && _.isNumber(value) && currValue !== value) || (!_.isObject(value) && _.isObject(currValue) && currValue.id !== value) || (value instanceof Backbone.Model && value.cid !== currValue.cid));
             if (shouldRefreshRelation) {
               changes.push(key);
+              _this.changed[key] = value;
               _this._emptyRelation(relation);
               value = _.isArray(value) ? value : [value];
               results = [];
