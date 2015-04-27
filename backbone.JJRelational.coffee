@@ -512,7 +512,9 @@ do () ->
                                                (currValue == null) or
                                                (_.isNumber(currValue) and _.isNumber(value) and currValue != value) or
                                                (!_.isObject(value) and _.isObject(currValue) and currValue.id != value) or
-                                               (value instanceof Backbone.Model and value.cid != currValue.cid))
+                                               (value instanceof Backbone.Model and value.cid != currValue.cid) or
+                                               (_.isArray(value) && (!_.isEqual(value, currValue) or currValue instanceof Backbone.Collection)))
+
         if shouldRefreshRelation
           # we ignored adding changes in `checkAndSet`, so we have to add it now
           changes.push key
