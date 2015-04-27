@@ -519,7 +519,7 @@
         prev = this._previousAttributes;
         checkAndSet = (function(_this) {
           return function(key, value) {
-            var currValue, isRelation, j, len, relation, results, shouldRefreshRelation, v;
+            var currValue, isRelation, j, len, relation, shouldRefreshRelation, v;
             if (!_.contains(_.pluck(_this.relations, 'key'), key)) {
               if (!_.isEqual(current[key], value)) {
                 changes.push(key);
@@ -540,27 +540,23 @@
             shouldRefreshRelation = isRelation && (unset || (currValue === null) || (_.isNumber(currValue) && _.isNumber(value) && currValue !== value) || (!_.isObject(value) && _.isObject(currValue) && currValue.id !== value) || (value instanceof Backbone.Model && value.cid !== currValue.cid));
             if (shouldRefreshRelation) {
               changes.push(key);
+              _this.changed[key] = value;
               _this._emptyRelation(relation);
               value = _.isArray(value) ? value : [value];
-              results = [];
               for (j = 0, len = value.length; j < len; j++) {
                 v = value[j];
                 if (!unset) {
-                  results.push(_this.checkAndAdd(v, relation, options));
-                } else {
-                  results.push(void 0);
+                  _this.checkAndAdd(v, relation, options);
                 }
               }
-              return results;
-            } else if (isRelation) {
-              return _this;
-            } else {
+            } else if (!isRelation) {
               if (unset) {
-                return delete current[key];
+                delete current[key];
               } else {
-                return current[key] = value;
+                current[key] = value;
               }
             }
+            return _this;
 
             /**
              * @end edit JJRelational

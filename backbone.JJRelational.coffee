@@ -514,16 +514,16 @@ do () ->
         if shouldRefreshRelation
           # we ignored adding changes in `checkAndSet`, so we have to add it now
           changes.push key
+          @.changed[key] = value
           # if yes, empty relation
           @._emptyRelation relation
           value = if _.isArray value then value else [value]
           for v in value
             # check the value and add it to the relation accordingly
             @.checkAndAdd(v, relation, options) unless unset
-        else if isRelation
-          @
-        else
+        else if not isRelation
           if unset then delete current[key] else current[key] = value
+        @
         ###*
          * @end edit JJRelational
         ###
