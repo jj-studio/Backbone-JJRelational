@@ -521,10 +521,9 @@ do () ->
           for v in value
             # check the value and add it to the relation accordingly
             @.checkAndAdd(v, relation, options) unless unset
-        else if isRelation
-          @
-        else
+        else if not isRelation
           if unset then delete current[key] else current[key] = value
+        @
         ###*
          * @end edit JJRelational
         ###
