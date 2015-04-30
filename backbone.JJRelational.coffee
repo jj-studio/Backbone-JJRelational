@@ -512,13 +512,16 @@ do () ->
                                                (currValue == null) or
                                                (_.isNumber(currValue) and _.isNumber(value) and currValue != value) or
                                                (!_.isObject(value) and _.isObject(currValue) and currValue.id != value) or
-                                               (value instanceof Backbone.Model and value.cid != currValue.cid))
+                                               (value instanceof Backbone.Model and value.cid != currValue.cid) or
+                                               (_.isArray(value) && (!_.isEqual(value, currValue) or currValue instanceof Backbone.Collection)))
+
         if shouldRefreshRelation
           # we ignored adding changes in `checkAndSet`, so we have to add it now
           changes.push key
           @.changed[key] = value
-          # if yes, empty relation
-          @._emptyRelation relation
+          # if we already have a collection, don't empty it - the default will be to add/merge models
+          # otherwise, it's safe to empty the relation and start over
+          if currValue not instanceof Backbone.Collection then @._emptyRelation relation
           value = if _.isArray value then value else [value]
           for v in value
             # check the value and add it to the relation accordingly
