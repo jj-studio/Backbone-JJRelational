@@ -311,7 +311,7 @@
        */
       save: function(key, value, options) {
         attrs;
-        var actualSave, attributes, attrs, checkAndContinue, checkIfNew, j, k, l, len, len1, len2, model, obj, opts, ref, ref1, relModelsToSave, relation, returnXhr, val;
+        var actualSave, attributes, attrs, checkAndContinue, checkIfNew, j, k, l, len, len1, len2, len3, m, model, obj, opts, origOptions, ref, ref1, ref2, relModelsToSaveAfter, relModelsToSaveBefore, relation, returnXhr, reverseRelation, val;
         returnXhr = null;
         attributes = this.attributes;
         if (_.isObject(key) || !key) {
@@ -335,6 +335,9 @@
         if (attrs && options.wait) {
           this.attributes = _.extend({}, attributes, attrs);
         }
+        origOptions = _.clone(options);
+        relModelsToSaveAfter = [];
+        relModelsToSaveBefore = [];
         actualSave = (function(_this) {
           return function() {
             var method, success, xhr;
@@ -351,7 +354,19 @@
               options.parse = true;
             }
             options.success = function(resp, status, xhr) {
-              var serverAttrs;
+              var saveRelModelsAfterSuccess, serverAttrs;
+              saveRelModelsAfterSuccess = function() {
+                var relModel;
+                if (relModelsToSaveAfter.length > 0) {
+                  relModel = relModelsToSaveAfter.shift();
+                  if (relModel.isNew()) {
+                    return relModel.save({}, _.extend({}, origOptions, {
+                      success: saveRelModelsAfterSuccess
+                    }));
+                  }
+                }
+              };
+              saveRelModelsAfterSuccess();
               _this.attributes = attributes;
               serverAttrs = _this.parse(resp, options);
               if (options.wait) {
@@ -380,25 +395,28 @@
         if (!options.ignoreSaveOnModels) {
           options.ignoreSaveOnModels = [this];
         }
-        relModelsToSave = [];
-        checkIfNew = function(val) {
+        checkIfNew = function(val, saveAfter) {
           try {
             if (val && (val instanceof Backbone.JJRelationalModel) && val.url() && val.isNew()) {
-              return relModelsToSave.push({
-                model: val,
-                done: false
-              });
+              if (saveAfter) {
+                return relModelsToSaveAfter.push(model);
+              } else {
+                return relModelsToSaveBefore.push({
+                  model: val,
+                  done: false
+                });
+              }
             }
           } catch (_error) {}
         };
         checkAndContinue = function() {
           var done, j, len, obj;
-          if (_.isEmpty(relModelsToSave)) {
+          if (_.isEmpty(relModelsToSaveBefore)) {
             returnXhr = actualSave();
           }
           done = true;
-          for (j = 0, len = relModelsToSave.length; j < len; j++) {
-            obj = relModelsToSave[j];
+          for (j = 0, len = relModelsToSaveBefore.length; j < len; j++) {
+            obj = relModelsToSaveBefore[j];
             if (obj.done === false) {
               done = false;
             }
@@ -412,29 +430,38 @@
           for (j = 0, len = ref.length; j < len; j++) {
             relation = ref[j];
             val = this.get(relation.key);
-            if (isOneType(relation)) {
-              checkIfNew(val);
-            } else if (isManyType(relation)) {
+            reverseRelation = val instanceof Backbone.Collection && val.first() ? _.findWhere(val.first().relations, {
+              key: relation.reverseKey
+            }) : null;
+            if (reverseRelation && isManyType(relation) && isOneType(reverseRelation)) {
               ref1 = val.models;
               for (k = 0, len1 = ref1.length; k < len1; k++) {
                 model = ref1[k];
-                checkIfNew(model);
+                checkIfNew(model, true);
               }
+            } else if (isManyType(relation)) {
+              ref2 = val.models;
+              for (l = 0, len2 = ref2.length; l < len2; l++) {
+                model = ref2[l];
+                checkIfNew(model, false);
+              }
+            } else if (isOneType(relation)) {
+              checkIfNew(val, false);
             }
           }
         }
-        if (_.isEmpty(relModelsToSave)) {
+        if (_.isEmpty(relModelsToSaveBefore)) {
           returnXhr = actualSave();
         }
-        for (l = 0, len2 = relModelsToSave.length; l < len2; l++) {
-          obj = relModelsToSave[l];
+        for (m = 0, len3 = relModelsToSaveBefore.length; m < len3; m++) {
+          obj = relModelsToSaveBefore[m];
           if (_.indexOf(options.ignoreSaveOnModels, obj.model) <= -1) {
             options.ignoreSaveOnModels.push(obj.model);
             opts = _.clone(options);
             opts.success = function(model, resp) {
-              var len3, m;
-              for (m = 0, len3 = relModelsToSave.length; m < len3; m++) {
-                obj = relModelsToSave[m];
+              var len4, o;
+              for (o = 0, len4 = relModelsToSaveBefore.length; o < len4; o++) {
+                obj = relModelsToSaveBefore[o];
                 if (obj.model.cid === model.cid) {
                   obj.done = true;
                 }
