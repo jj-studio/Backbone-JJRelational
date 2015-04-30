@@ -463,7 +463,7 @@ do () ->
       # actual setting
       checkAndSet = (key, value) =>
         if not _.isEqual current[key], value then changes.push key
-        if not _.isEqual prev[key], value then @.changed[key] = val else delete @.changed[key]
+        if not _.isEqual prev[key], value then @.changed[key] = value else delete @.changed[key]
         ###*
          * @begin edit JJRelational
         ###
