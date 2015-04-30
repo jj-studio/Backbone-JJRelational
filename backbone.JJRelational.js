@@ -1140,7 +1140,7 @@
      * @param {Object} options                                 Options object
      */
     Backbone.Collection.prototype.set = function(models, options) {
-      var existModel, id, idsToAdd, idsToRemove, j, k, l, len, len1, len2, model, modelToAdd, modelsToAdd;
+      var existModel, id, idsToAdd, idsToRemove, j, k, l, len, len1, len2, model, modelToAdd, modelsToAdd, relAttrs;
       if (!this._relational) {
         return this.__set(models, options);
       }
@@ -1163,6 +1163,11 @@
                 break;
               }
             } else {
+              if (this._relational && this._relational.reverseKey && this._relational.owner) {
+                relAttrs = {};
+                relAttrs[this._relational.reverseKey] = this._relational.owner;
+                model = _.extend(relAttrs, model);
+              }
               model = this._prepareModel(model, options);
             }
           }
