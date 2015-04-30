@@ -341,9 +341,9 @@
               options.contentType = 'application/json';
             }
             if (!options.data) {
-              options.data = JSON.stringify(_this.toJSON({
+              options.data = JSON.stringify(_this.toJSON(_.extend({}, options, {
                 isSave: true
-              }));
+              })));
             }
             if (options.parse === void 0) {
               options.parse = true;
