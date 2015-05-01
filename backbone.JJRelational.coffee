@@ -519,13 +519,16 @@ do () ->
           # we ignored adding changes in `checkAndSet`, so we have to add it now
           changes.push key
           @.changed[key] = value
-          # if we already have a collection, don't empty it - the default will be to add/merge models
-          # otherwise, it's safe to empty the relation and start over
-          if currValue not instanceof Backbone.Collection then @._emptyRelation relation
           value = if _.isArray value then value else [value]
-          for v in value
-            # check the value and add it to the relation accordingly
-            @.checkAndAdd(v, relation, options) unless unset
+          # if we already have a collection, don't empty it - just simply call set() on it!
+          if currValue instanceof Backbone.Collection
+            currValue.set value, options
+          else
+          # otherwise, it's safe to empty the relation and start over
+            @._emptyRelation relation
+            for v in value
+              # check the value and add it to the relation accordingly
+              @.checkAndAdd(v, relation, options) unless unset
         else if not isRelation
           if unset then delete current[key] else current[key] = value
         @

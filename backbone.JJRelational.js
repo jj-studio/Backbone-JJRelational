@@ -542,14 +542,16 @@
             if (shouldRefreshRelation) {
               changes.push(key);
               _this.changed[key] = value;
-              if (!(currValue instanceof Backbone.Collection)) {
-                _this._emptyRelation(relation);
-              }
               value = _.isArray(value) ? value : [value];
-              for (j = 0, len = value.length; j < len; j++) {
-                v = value[j];
-                if (!unset) {
-                  _this.checkAndAdd(v, relation, options);
+              if (currValue instanceof Backbone.Collection) {
+                currValue.set(value, options);
+              } else {
+                _this._emptyRelation(relation);
+                for (j = 0, len = value.length; j < len; j++) {
+                  v = value[j];
+                  if (!unset) {
+                    _this.checkAndAdd(v, relation, options);
+                  }
                 }
               }
             } else if (!isRelation) {
