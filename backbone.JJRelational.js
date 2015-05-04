@@ -2,7 +2,7 @@
 
 /**
  * Backbone JJRelational
- * v0.2.11
+ * v0.2.12
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -311,7 +311,7 @@
        */
       save: function(key, value, options) {
         attrs;
-        var actualSave, attributes, attrs, checkAndContinue, checkIfNew, j, k, l, len, len1, len2, len3, m, model, obj, opts, origOptions, ref, ref1, ref2, relModelsToSaveAfter, relModelsToSaveBefore, relation, returnXhr, reverseRelation, val;
+        var actualSave, attributes, attrs, checkAndContinue, checkIfNew, j, k, l, len, len1, len2, len3, model, o, obj, opts, origOptions, ref, ref1, ref2, relModelsToSaveAfter, relModelsToSaveBefore, relation, returnXhr, reverseRelation, val;
         returnXhr = null;
         attributes = this.attributes;
         if (_.isObject(key) || !key) {
@@ -454,15 +454,15 @@
         if (_.isEmpty(relModelsToSaveBefore)) {
           returnXhr = actualSave();
         }
-        for (m = 0, len3 = relModelsToSaveBefore.length; m < len3; m++) {
-          obj = relModelsToSaveBefore[m];
+        for (o = 0, len3 = relModelsToSaveBefore.length; o < len3; o++) {
+          obj = relModelsToSaveBefore[o];
           if (_.indexOf(options.ignoreSaveOnModels, obj.model) <= -1) {
             options.ignoreSaveOnModels.push(obj.model);
             opts = _.clone(options);
             opts.success = function(model, resp) {
-              var len4, o;
-              for (o = 0, len4 = relModelsToSaveBefore.length; o < len4; o++) {
-                obj = relModelsToSaveBefore[o];
+              var len4, p;
+              for (p = 0, len4 = relModelsToSaveBefore.length; p < len4; p++) {
+                obj = relModelsToSaveBefore[p];
                 if (obj.model.cid === model.cid) {
                   obj.done = true;
                 }
@@ -542,14 +542,16 @@
             if (shouldRefreshRelation) {
               changes.push(key);
               _this.changed[key] = value;
-              if (!(currValue instanceof Backbone.Collection)) {
-                _this._emptyRelation(relation);
-              }
               value = _.isArray(value) ? value : [value];
-              for (j = 0, len = value.length; j < len; j++) {
-                v = value[j];
-                if (!unset) {
-                  _this.checkAndAdd(v, relation, options);
+              if (currValue instanceof Backbone.Collection) {
+                currValue.set(value, options);
+              } else {
+                _this._emptyRelation(relation);
+                for (j = 0, len = value.length; j < len; j++) {
+                  v = value[j];
+                  if (!unset) {
+                    _this.checkAndAdd(v, relation, options);
+                  }
                 }
               }
             } else if (!isRelation) {
@@ -1226,6 +1228,9 @@
           options.merge = false;
         }
       }
+      options.parse = _.filter(modelsToAdd, function(m) {
+        return m instanceof Backbone.Model;
+      }).length === 0;
       return this.__set(modelsToAdd, options);
     };
 

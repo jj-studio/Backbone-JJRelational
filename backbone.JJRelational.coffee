@@ -1,6 +1,6 @@
 ###*
  * Backbone JJRelational
- * v0.2.11
+ * v0.2.12
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -519,13 +519,16 @@ do () ->
           # we ignored adding changes in `checkAndSet`, so we have to add it now
           changes.push key
           @.changed[key] = value
-          # if we already have a collection, don't empty it - the default will be to add/merge models
-          # otherwise, it's safe to empty the relation and start over
-          if currValue not instanceof Backbone.Collection then @._emptyRelation relation
           value = if _.isArray value then value else [value]
-          for v in value
-            # check the value and add it to the relation accordingly
-            @.checkAndAdd(v, relation, options) unless unset
+          # if we already have a collection, don't empty it - just simply call `set()` on it!
+          if currValue instanceof Backbone.Collection
+            currValue.set value, options
+          else
+          # otherwise, it's safe to empty the relation and start over
+            @._emptyRelation relation
+            for v in value
+              # check the value and add it to the relation accordingly
+              @.checkAndAdd(v, relation, options) unless unset
         else if not isRelation
           if unset then delete current[key] else current[key] = value
         @
@@ -1061,6 +1064,9 @@ do () ->
 
       # set options.merge to false as we have alread merged it with the call to `_prepareModel` above (when working with store)
       if Backbone.JJRelational.Config.work_with_store then options.merge = false
+
+    # set parse to false if we've got actual backbone models in the collection, otherwise we'd be re-parsing them
+    options.parse = _.filter(modelsToAdd, (m) -> m instanceof Backbone.Model).length == 0
 
     # Normal "`add`" and return collection for chainability
     @.__set modelsToAdd, options
