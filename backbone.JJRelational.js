@@ -661,7 +661,7 @@
         var include, j, json, k, key, len, len1, ref, ref1, relValue, relation;
         options = options || {};
         if (options.withRelIDs) {
-          return this.toJSONWithRelIDs();
+          return this.toJSONWithRelIDs(options);
         }
         json = _.clone(this.attributes);
         if (options.bypass) {
@@ -681,14 +681,14 @@
               if (relValue) {
                 if (relValue instanceof relation.relatedModel === true) {
                   if (include.length === 0) {
-                    json[relation.key] = relValue.toJSONWithRelIDs();
+                    json[relation.key] = relValue.toJSONWithRelIDs(options);
                   } else if (include.length === 1) {
                     json[relation.key] = relValue.get(include[0]);
                   } else {
-                    json[relation.key] = relValue.toJSON({
+                    json[relation.key] = relValue.toJSON(_.extend({}, options, {
                       isSave: true,
                       scaffold: include
-                    });
+                    }));
                   }
                 } else {
                   json[relation.key] = _.indexOf(include, relation.relatedModel.prototype.idAttribute) >= 0 ? relValue : null;
@@ -698,16 +698,16 @@
               }
             } else if (isManyType(relation)) {
               if (include.length === 0) {
-                json[relation.key] = relValue.toJSON({
+                json[relation.key] = relValue.toJSON(_.extend({}, options, {
                   withRelIDs: true
-                });
+                }));
               } else if (include.length === 1) {
                 json[relation.key] = relValue.getArrayForAttribute(include[0]);
               } else {
-                json[relation.key] = relValue.toJSON({
+                json[relation.key] = relValue.toJSON(_.extend({}, options, {
                   isSave: true,
                   scaffold: include
-                });
+                }));
                 if (_.indexOf(include, 'id') >= 0) {
                   json[relation.key].push(relValue._relational.idQueue);
                 }
@@ -720,11 +720,11 @@
             relation = ref1[k];
             relValue = this.get(relation.key);
             if (isOneType(relation)) {
-              json[relation.key] = relValue instanceof relation.relatedModel === true ? relValue.toJSONWithRelIDs() : relValue;
+              json[relation.key] = relValue instanceof relation.relatedModel === true ? relValue.toJSONWithRelIDs(options) : relValue;
             } else if (isManyType(relation)) {
-              json[relation.key] = relValue.toJSON({
+              json[relation.key] = relValue.toJSON(_.extend({}, options, {
                 withRelIDs: true
-              });
+              }));
             }
           }
         }

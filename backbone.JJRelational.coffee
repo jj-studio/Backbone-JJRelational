@@ -607,7 +607,7 @@ do () ->
     toJSON: (options) ->
       options = options || {}
       # if options.withRelIDs, return the model with its related models represented only by ids
-      if options.withRelIDs then return @.toJSONWithRelIDs()
+      if options.withRelIDs then return @.toJSONWithRelIDs(options)
 
       json = _.clone @.attributes
       # if options.bypass, return normal Backbone toJSON-function
@@ -626,11 +626,11 @@ do () ->
             if relValue
               if (relValue instanceof relation.relatedModel is true)
                 if include.length is 0
-                  json[relation.key] = relValue.toJSONWithRelIDs()
+                  json[relation.key] = relValue.toJSONWithRelIDs(options)
                 else if include.length is 1
                   json[relation.key] = relValue.get(include[0])
                 else
-                  json[relation.key] = relValue.toJSON {isSave: true, scaffold:include}
+                  json[relation.key] = relValue.toJSON(_.extend({}, options, {isSave: true, scaffold:include}))
               else
                 # only id is present. check if 'id' is specified in includeInJSON
                 json[relation.key] = if ( _.indexOf(include, relation.relatedModel.prototype.idAttribute) >=0 ) then relValue else null
@@ -638,11 +638,11 @@ do () ->
               json[relation.key] = null
           else if isManyType relation
             if include.length is 0
-              json[relation.key] = relValue.toJSON {withRelIDs: true}
+              json[relation.key] = relValue.toJSON(_.extend({}, options, {withRelIDs: true}))
             else if include.length is 1
               json[relation.key] = relValue.getArrayForAttribute include[0]
             else
-              json[relation.key] = relValue.toJSON {isSave: true, scaffold:include}
+              json[relation.key] = relValue.toJSON(_.extend({}, options, {isSave: true, scaffold:include}))
               if _.indexOf(include, 'id') >= 0 then json[relation.key].push relValue._relational.idQueue
 
       # e.g. for views
@@ -651,9 +651,9 @@ do () ->
         for relation in @.relations
           relValue = @.get relation.key
           if isOneType relation
-            json[relation.key] = if (relValue instanceof relation.relatedModel is true) then relValue.toJSONWithRelIDs() else relValue
+            json[relation.key] = if (relValue instanceof relation.relatedModel is true) then relValue.toJSONWithRelIDs(options) else relValue
           else if isManyType relation
-            json[relation.key] = relValue.toJSON {withRelIDs: true}
+            json[relation.key] = relValue.toJSON(_.extend({}, options, {withRelIDs: true}))
 
       if options.scaffold
         json = _.pick.apply that, [json, options.scaffold]
