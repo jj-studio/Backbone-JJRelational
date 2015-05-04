@@ -520,7 +520,7 @@ do () ->
           changes.push key
           @.changed[key] = value
           value = if _.isArray value then value else [value]
-          # if we already have a collection, don't empty it - just simply call set() on it!
+          # if we already have a collection, don't empty it - just simply call `set()` on it!
           if currValue instanceof Backbone.Collection
             currValue.set value, options
           else
@@ -1064,6 +1064,9 @@ do () ->
 
       # set options.merge to false as we have alread merged it with the call to `_prepareModel` above (when working with store)
       if Backbone.JJRelational.Config.work_with_store then options.merge = false
+
+    # set parse to false if we've got actual backbone models in the collection, otherwise we'd be re-parsing them
+    options.parse = _.filter(modelsToAdd, (m) -> m instanceof Backbone.Model).length == 0
 
     # Normal "`add`" and return collection for chainability
     @.__set modelsToAdd, options
