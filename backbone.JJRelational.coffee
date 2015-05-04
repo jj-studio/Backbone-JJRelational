@@ -1,6 +1,6 @@
 ###*
  * Backbone JJRelational
- * v0.2.11
+ * v0.2.12
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *

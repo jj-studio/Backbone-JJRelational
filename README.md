@@ -14,7 +14,7 @@ __________                __   ___.
                            \/     \/          \/                    \/     \/      
 ```
 
-### Version 0.2.11
+### Version 0.2.12
 
 __Backbone JJRelational__ is a plugin that provides __one-to-one, one-to-many, many-to-one and many-to-many__ bi-directional relations between Backbone models.  
   
@@ -303,7 +303,7 @@ var author = new Author({books: [{title: 'a book'}]}); // works fine!
 <a name="saving-and-fetching-data" />
 ## Sync - saving and fetching data
 
-### Saving (part 1)
+### Saving Explained
 
 Backbone.JJRelational handles everything for you automatically. Nevertheless, this section should explain some of the concepts and possibilities you have when fetching from/persisting to the server.
 
@@ -315,7 +315,10 @@ Assume that a Store `has_many` Products, and Product `has_one` Store. You call `
 
 It should be noted that these related models will only be saved before/after if the model `isNew()`. If these are existing models, then you should save them each yourself individually.
 
-### Saving (part 2)
+You should also be aware that `save` will inevitably call `set()` on the response returned from the server, and so the usual backbone set options apply. Please read the backbone docs on how to use the `add`, `remove`, and `merge` options. In some cases, you'll probably want to pass these to `save`, which will in turn pass them through to `set`.
+Consider the above case where we've called `store.save()`. If the server responded with this json for a store `{"name": "storename", "products": []}`, this would end up wiping out all the products for the store when we `set` this response. Calling `save(attrs, {remove: false})` would fix this.
+
+### Saving (many-to-many example)
 
 ```javascript
 // We pretend our relational setup is the same as in the setup example.
