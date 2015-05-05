@@ -38,10 +38,11 @@ Backbone JJRelational has been tested with Backbone 1.0.0 and Underscore 1.5.0
 <a name="installation" /> 
 ## Installation
 
-Backbone JJRelational depends - who would have thought - on [Backbone.JS](https://github.com/documentcloud/backbone) and [Underscore.JS](https://github.com/documentcloud/underscore).  
-Simply include backbone.JJRelational.js right after Underscore and Backbone.
+Backbone JJRelational depends - who would have thought - on [Backbone.JS](https://github.com/documentcloud/backbone), [Underscore.JS](https://github.com/documentcloud/underscore) and [jQuery](https://github.com/jquery/jquery).  
+Simply include backbone.JJRelational.js right after jQuery, Underscore and Backbone.
 
 ```html
+<script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="underscore.js"></script>
 <script type="text/javascript" src="backbone.js"></script>
 <script type="text/javascript" src="backbone.JJRelational.js"></script>
@@ -312,6 +313,8 @@ When calling __save__ on a model, the `includeInJSON` property you defined for t
 When you call `save` on a `Backbone.JJRelationalModel`, it will walk through that model's relations. If the model `has_one` of something that `has_many` of it (like a Stores -> Products relationship), then the parent model (Store) will be saved __first__! Otherwise, the related model will be saved first.
 
 Assume that a Store `has_many` Products, and Product `has_one` Store. You call `store.save()` ... So the Store will save itself first. After this completes, the Product's `save` will be called.
+
+The Deferred object returned by `save` won't be resolved until all of the model's dependent models have finished saving too.
 
 It should be noted that these related models will only be saved before/after if the model `isNew()`. If these are existing models, then you should save them each yourself individually.
 
