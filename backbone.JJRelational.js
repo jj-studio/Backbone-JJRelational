@@ -340,7 +340,7 @@
         relModelsToSaveBefore = [];
         actualSave = (function(_this) {
           return function() {
-            var method, success, xhr;
+            var afterSuccess, generateSuccessHandler, j, latestSuccess, len, method, relModel, success, xhr;
             success = options.success;
             if (!options.contentType) {
               options.contentType = 'application/json';
@@ -353,20 +353,27 @@
             if (options.parse === void 0) {
               options.parse = true;
             }
-            options.success = function(resp, status, xhr) {
-              var saveRelModelsAfterSuccess, serverAttrs;
-              saveRelModelsAfterSuccess = function() {
-                var relModel;
-                if (relModelsToSaveAfter.length > 0) {
-                  relModel = relModelsToSaveAfter.shift();
-                  if (relModel.isNew()) {
-                    return relModel.save({}, _.extend({}, origOptions, {
-                      success: saveRelModelsAfterSuccess
-                    }));
-                  }
+            afterSuccess = new Backbone.$.Deferred();
+            latestSuccess = afterSuccess;
+            generateSuccessHandler = function(model) {
+              return function() {
+                var d;
+                if (model.isNew()) {
+                  return model.save({}, _.extend({}, origOptions));
+                } else {
+                  d = new Backbone.$.Deferred();
+                  d.resolve();
+                  return d;
                 }
               };
-              saveRelModelsAfterSuccess();
+            };
+            for (j = 0, len = relModelsToSaveAfter.length; j < len; j++) {
+              relModel = relModelsToSaveAfter[j];
+              latestSuccess = latestSuccess.then(generateSuccessHandler(relModel));
+            }
+            options.success = function(resp, status, xhr) {
+              var serverAttrs;
+              afterSuccess.resolve();
               _this.attributes = attributes;
               serverAttrs = _this.parse(resp, options);
               if (options.wait) {
@@ -390,7 +397,7 @@
             if (attrs && options.wait) {
               _this.attributes = attributes;
             }
-            return xhr;
+            return latestSuccess;
           };
         })(this);
         if (!options.ignoreSaveOnModels) {

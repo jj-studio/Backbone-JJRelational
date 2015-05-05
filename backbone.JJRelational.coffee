@@ -347,16 +347,26 @@ do () ->
 
         if options.parse is undefined then options.parse = true
 
+        # Set up chain of deferreds to save each 'after' model.
+        # If we encounter a model that's not new, we'll simply return a Deferred that's already resolved as a sort of no-op.
+        # afterSuccess is resolved in the success handler of the model to kick off this process.
+        afterSuccess = new Backbone.$.Deferred();
+
+        latestSuccess = afterSuccess;
+        generateSuccessHandler = (model) =>
+          () =>
+            if model.isNew()
+              return model.save({}, _.extend({}, origOptions))
+            else
+              d = new Backbone.$.Deferred()
+              d.resolve()
+              return d
+          
+        for relModel in relModelsToSaveAfter
+          latestSuccess = latestSuccess.then generateSuccessHandler(relModel)
+
         options.success = (resp, status, xhr) =>
-          # we're in the actualSave success function, so now let's invoke a save on our "after" models
-          # the success callback we're going to pass is this function, so the next model in the relModelsToSaveAfter list
-          # won't be saved until the previous model has finished saving itself and all of its before/after dependencies
-          # we could probably analyze this dependency graph more to be more performant...maybe someday.
-          saveRelModelsAfterSuccess = =>
-            if relModelsToSaveAfter.length > 0
-              relModel = relModelsToSaveAfter.shift()
-              if relModel.isNew() then relModel.save({}, _.extend({}, origOptions, {success: saveRelModelsAfterSuccess}))
-          saveRelModelsAfterSuccess()
+          afterSuccess.resolve()
 
           # Ensure attribtues are restored during synchronous saves
           @attributes = attributes
@@ -379,7 +389,8 @@ do () ->
         # Restore attributes
         if attrs and options.wait then @.attributes = attributes
 
-        xhr
+        # Yield a Deferred that will be resolved when every model has been updated
+        latestSuccess
 
       # Okay, so here's actually happening it. When we're saving - and a model in a relation is not yet saved
       # we have to save the related model first. Only then can we save our actual model.
