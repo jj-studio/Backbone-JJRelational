@@ -357,8 +357,15 @@
             latestSuccess = afterSuccess;
             generateSuccessHandler = function(model) {
               return function() {
-                var d;
-                if (model.isNew()) {
+                var d, e, modelHasUrlError;
+                modelHasUrlError = false;
+                try {
+                  _.result(model, 'url');
+                } catch (_error) {
+                  e = _error;
+                  modelHasUrlError = true;
+                }
+                if (!modelHasUrlError && model.isNew() && _.result(model, 'url')) {
                   return model.save({}, _.extend({}, origOptions));
                 } else {
                   d = new Backbone.$.Deferred();
@@ -373,7 +380,6 @@
             }
             options.success = function(resp, status, xhr) {
               var serverAttrs;
-              afterSuccess.resolve();
               _this.attributes = attributes;
               serverAttrs = _this.parse(resp, options);
               if (options.wait) {
@@ -385,6 +391,7 @@
               if (success) {
                 success(_this, resp, options);
               }
+              afterSuccess.resolve();
               return _this.trigger('sync', _this, resp, options);
             };
             wrapError(_this, options);
@@ -1200,7 +1207,7 @@
                 break;
               }
             } else {
-              if (this._relational && this._relational.reverseKey && this._relational.owner) {
+              if (!options.parse && this._relational && this._relational.reverseKey && this._relational.owner) {
                 relAttrs = {};
                 relAttrs[this._relational.reverseKey] = this._relational.owner;
                 model = _.extend(relAttrs, model);
