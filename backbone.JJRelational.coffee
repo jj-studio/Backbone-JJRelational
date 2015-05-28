@@ -529,7 +529,8 @@ do () ->
         shouldRefreshRelation = isRelation and (unset or
                                                (currValue == null) or
                                                (_.isNumber(currValue) and _.isNumber(value) and currValue != value) or
-                                               (!_.isObject(value) and _.isObject(currValue) and currValue.id != value) or
+                                               (!_.isObject(value) and _.isObject(currValue) and currValue.id and currValue.id != value) or
+                                               (_.isObject(value) and _.isObject(currValue) and currValue.id and value.id and currValue.id != value.id) or
                                                (value instanceof Backbone.Model and value.cid != currValue.cid) or
                                                (_.isArray(value) && (!_.isEqual(value, currValue) or currValue instanceof Backbone.Collection)))
 
