@@ -552,7 +552,7 @@
             relation = _this.getRelationByKey(key);
             isRelation = _this.relationsInstalled && relation;
             currValue = _this.get(key);
-            shouldRefreshRelation = isRelation && (unset || (currValue === null) || (_.isNumber(currValue) && _.isNumber(value) && currValue !== value) || (!_.isObject(value) && _.isObject(currValue) && currValue.id !== value) || (value instanceof Backbone.Model && value.cid !== currValue.cid) || (_.isArray(value) && (!_.isEqual(value, currValue) || currValue instanceof Backbone.Collection)));
+            shouldRefreshRelation = isRelation && (unset || (currValue === null) || (_.isNumber(currValue) && _.isNumber(value) && currValue !== value) || (!_.isObject(value) && _.isObject(currValue) && currValue.id && currValue.id !== value) || (_.isObject(value) && _.isObject(currValue) && currValue.id && value.id && currValue.id !== value.id) || (value instanceof Backbone.Model && value.cid !== currValue.cid) || (_.isArray(value) && (!_.isEqual(value, currValue) || currValue instanceof Backbone.Collection)));
             if (shouldRefreshRelation) {
               changes.push(key);
               _this.changed[key] = value;
