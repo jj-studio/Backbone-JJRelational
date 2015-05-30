@@ -602,7 +602,7 @@
           this.id = attrs[this.idAttribute];
           checkAndSet(this.idAttribute, attrs[this.idAttribute]);
           triggerChanges();
-          i = changes.indexOf(this.idAttribute);
+          i = _.indexOf(changes, this.idAttribute);
           if (~i) {
             changes.splice(i, 1);
           }
