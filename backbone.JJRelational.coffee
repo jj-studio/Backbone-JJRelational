@@ -1,6 +1,6 @@
 ###*
  * Backbone JJRelational
- * v0.2.12
+ * v0.2.13
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -113,7 +113,7 @@ do () ->
 
   Backbone.JJRelational = {}
 
-  Backbone.JJRelational.VERSION = '0.2.11'
+  Backbone.JJRelational.VERSION = '0.2.13'
 
   Backbone.JJRelational.Config = {
     url_id_appendix : '?ids='
@@ -253,6 +253,7 @@ do () ->
               owner       : @
               ownerKey    : relation.key
               reverseKey  : relation.reverseKey
+              polymorphic : !!relation.polymorphic
               idQueue     : []
           else
             value = null
@@ -1062,7 +1063,7 @@ do () ->
 
         # check if models are instances of this collection's model
         if model
-          if model instanceof @.model is false
+          if not this._relational.polymorphic and model instanceof @.model is false
             throw new TypeError 'Invalid model to be added to collection with relation key "' + @._relational.ownerKey + '"'
           else
             modelsToAdd.push model
