@@ -2,7 +2,7 @@
 
 /**
  * Backbone JJRelational
- * v0.2.12
+ * v0.2.13
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -110,7 +110,7 @@
      *
      */
     Backbone.JJRelational = {};
-    Backbone.JJRelational.VERSION = '0.2.11';
+    Backbone.JJRelational.VERSION = '0.2.13';
     Backbone.JJRelational.Config = {
       url_id_appendix: '?ids=',
       work_with_store: true
@@ -255,6 +255,7 @@
                 owner: this,
                 ownerKey: relation.key,
                 reverseKey: relation.reverseKey,
+                polymorphic: !!relation.polymorphic,
                 idQueue: []
               };
             } else {
@@ -1216,7 +1217,7 @@
             }
           }
           if (model) {
-            if (model instanceof this.model === false) {
+            if (!this._relational.polymorphic && model instanceof this.model === false) {
               throw new TypeError('Invalid model to be added to collection with relation key "' + this._relational.ownerKey + '"');
             } else {
               modelsToAdd.push(model);
