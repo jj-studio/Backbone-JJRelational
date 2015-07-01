@@ -788,7 +788,11 @@
         if (val instanceof relModel === true) {
           this.addToRelation(val, rel, false);
         } else if (_.isObject(val) && val instanceof Backbone.Model === false) {
-          newModel = new relModel(val);
+          if (rel.polymorphic && rel.collectionType) {
+            newModel = new Backbone.JJRelational.CollectionTypes[rel.collectionType].prototype.model(val);
+          } else {
+            newModel = new relModel(val);
+          }
           this.addToRelation(newModel, rel, false);
         } else {
           storeIdentifier = relModel.prototype.storeIdentifier;
