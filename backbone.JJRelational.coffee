@@ -716,7 +716,10 @@ do () ->
         @.addToRelation val, rel, false
       else if _.isObject(val) and val instanceof Backbone.Model is false
         # is an object -> Model has to be created and populated -> then add
-        newModel = new relModel val
+        if rel.polymorphic and rel.collectionType
+          newModel = new (Backbone.JJRelational.CollectionTypes[rel.collectionType].prototype.model)(val)
+        else
+          newModel = new relModel(val)
         @.addToRelation newModel, rel, false
       else
         # must be the id. look it up in the store or add it to idQueue
