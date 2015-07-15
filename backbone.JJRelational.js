@@ -791,6 +791,9 @@
         if (val instanceof relModel === true) {
           this.addToRelation(val, rel, false);
         } else if (_.isObject(val) && val instanceof Backbone.Model === false) {
+          if (this.relationsInstalled && (val[rel.reverseKey] == null)) {
+            val[rel.reverseKey] = this;
+          }
           if (rel.polymorphic && rel.collectionType) {
             newModel = new Backbone.JJRelational.CollectionTypes[rel.collectionType].prototype.model(val);
           } else {
