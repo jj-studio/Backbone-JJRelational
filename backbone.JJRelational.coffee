@@ -204,6 +204,8 @@ do () ->
 
       # usual Backbone.Model constructor
       Backbone.Model.apply(this, arguments)
+      # attributes should be parsed by this point if the parse option is set
+      attributes = @parse(attributes or {}, options) if options and options.parse
       # set up the relational attributes
       @.__prepopulate_rel_atts()
       # put in store
