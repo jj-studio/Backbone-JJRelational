@@ -718,6 +718,7 @@ do () ->
         @.addToRelation val, rel, false
       else if _.isObject(val) and val instanceof Backbone.Model is false
         # is an object -> Model has to be created and populated -> then add
+        val[rel.reverseKey] = @ if @.relationsInstalled and !val[rel.reverseKey]? # optimistically set the reverse relationship key if it doesn't already exist
         if rel.polymorphic and rel.collectionType
           newModel = new (Backbone.JJRelational.CollectionTypes[rel.collectionType].prototype.model)(val)
         else
