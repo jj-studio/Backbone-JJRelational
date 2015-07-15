@@ -208,6 +208,9 @@
           return existModel;
         }
         Backbone.Model.apply(this, arguments);
+        if (options && options.parse) {
+          attributes = this.parse(attributes || {}, options);
+        }
         this.__prepopulate_rel_atts();
         Backbone.JJStore.__registerModelInStore(this);
         this.__populate_rels_with_atts(attributes, options);
