@@ -124,6 +124,52 @@ Backbone.JJRelational.registerCollectionTypes({
 This is an array of strings defining which attributes should be included when the model is saved.
 Leaving `includeInJSON` empty means that merely the related model's `id` is included.
 
+#### polymorphic
+If you have a polymorphic collection, set this option to true on the side that `has_many`.
+Note that this will completely disable the type checking when adding a model to the collection, so make sure you use it responsibly.
+In the following example, both CerealBoxes and MilkJugs will appear inside of the Backbone.JJStore.Models.Product collection,
+because they extend `Product` and do not override its `storeIdentifier` key.
+Example:
+```javascript```
+var Store = Backbone.JJRelationalModel.extend({
+  relations: [{
+    type: "has_many",
+    key: "products",
+    relatedModel: "Product",
+    collectionType: "ProductsCollection",
+    reverseKey: "store",
+    polymorphic: true
+  }]
+});
+
+var Product = Backbone.JJRelationalModel.extend({
+  storeIdentifier: "Product",
+  relations: [{
+    type: "has_one",
+    key: "store",
+    relatedModel: "Store",
+    reverseKey: "products",
+  }]
+});
+var CerealBox = Product.extend({ ... });
+var MilkJug   = Product.extend({ ... });
+
+var ProductFactory = (function() {
+  return {
+    buildModel: function(attrs, options) {
+      if (attrs.type === "cereal")    return new CerealBox(attrs, options);
+      else if (attrs.type === "milk") return new MilkCarton(attrs, options);
+      else                            return new Product(attrs, options);
+    }
+  };
+)();
+
+var ProductsCollection = Backbone.Collection.extend({
+  storeIdentifier: "ProductsCollection",
+  model: ProductFactory.buildModel
+});
+```
+
 <a name="setup-example" />
 ## Setup example
 Here is an example of how the relations between different models could be defined:

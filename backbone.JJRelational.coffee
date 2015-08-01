@@ -1,6 +1,6 @@
 ###*
  * Backbone JJRelational
- * v0.2.12
+ * v0.2.13
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -113,7 +113,7 @@ do () ->
 
   Backbone.JJRelational = {}
 
-  Backbone.JJRelational.VERSION = '0.2.11'
+  Backbone.JJRelational.VERSION = '0.2.13'
 
   Backbone.JJRelational.Config = {
     url_id_appendix : '?ids='
@@ -204,6 +204,8 @@ do () ->
 
       # usual Backbone.Model constructor
       Backbone.Model.apply(this, arguments)
+      # attributes should be parsed by this point if the parse option is set
+      attributes = @parse(attributes or {}, options) if options and options.parse
       # set up the relational attributes
       @.__prepopulate_rel_atts()
       # put in store
@@ -253,6 +255,7 @@ do () ->
               owner       : @
               ownerKey    : relation.key
               reverseKey  : relation.reverseKey
+              polymorphic : !!relation.polymorphic
               idQueue     : []
           else
             value = null
@@ -715,7 +718,11 @@ do () ->
         @.addToRelation val, rel, false
       else if _.isObject(val) and val instanceof Backbone.Model is false
         # is an object -> Model has to be created and populated -> then add
-        newModel = new relModel val
+        val[rel.reverseKey] = @ if @.relationsInstalled and !val[rel.reverseKey]? # optimistically set the reverse relationship key if it doesn't already exist
+        if rel.polymorphic and rel.collectionType
+          newModel = new (Backbone.JJRelational.CollectionTypes[rel.collectionType].prototype.model)(val)
+        else
+          newModel = new relModel(val)
         @.addToRelation newModel, rel, false
       else
         # must be the id. look it up in the store or add it to idQueue
@@ -1062,7 +1069,7 @@ do () ->
 
         # check if models are instances of this collection's model
         if model
-          if model instanceof @.model is false
+          if not this._relational.polymorphic and model instanceof @.model is false
             throw new TypeError 'Invalid model to be added to collection with relation key "' + @._relational.ownerKey + '"'
           else
             modelsToAdd.push model

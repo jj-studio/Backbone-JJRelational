@@ -2,7 +2,7 @@
 
 /**
  * Backbone JJRelational
- * v0.2.12
+ * v0.2.13
  *
  * A relational plugin for Backbone JS that provides one-to-one, one-to-many and many-to-many relations between Backbone models.
  *
@@ -110,7 +110,7 @@
      *
      */
     Backbone.JJRelational = {};
-    Backbone.JJRelational.VERSION = '0.2.11';
+    Backbone.JJRelational.VERSION = '0.2.13';
     Backbone.JJRelational.Config = {
       url_id_appendix: '?ids=',
       work_with_store: true
@@ -208,6 +208,9 @@
           return existModel;
         }
         Backbone.Model.apply(this, arguments);
+        if (options && options.parse) {
+          attributes = this.parse(attributes || {}, options);
+        }
         this.__prepopulate_rel_atts();
         Backbone.JJStore.__registerModelInStore(this);
         this.__populate_rels_with_atts(attributes, options);
@@ -255,6 +258,7 @@
                 owner: this,
                 ownerKey: relation.key,
                 reverseKey: relation.reverseKey,
+                polymorphic: !!relation.polymorphic,
                 idQueue: []
               };
             } else {
@@ -787,7 +791,14 @@
         if (val instanceof relModel === true) {
           this.addToRelation(val, rel, false);
         } else if (_.isObject(val) && val instanceof Backbone.Model === false) {
-          newModel = new relModel(val);
+          if (this.relationsInstalled && (val[rel.reverseKey] == null)) {
+            val[rel.reverseKey] = this;
+          }
+          if (rel.polymorphic && rel.collectionType) {
+            newModel = new Backbone.JJRelational.CollectionTypes[rel.collectionType].prototype.model(val);
+          } else {
+            newModel = new relModel(val);
+          }
           this.addToRelation(newModel, rel, false);
         } else {
           storeIdentifier = relModel.prototype.storeIdentifier;
@@ -1216,7 +1227,7 @@
             }
           }
           if (model) {
-            if (model instanceof this.model === false) {
+            if (!this._relational.polymorphic && model instanceof this.model === false) {
               throw new TypeError('Invalid model to be added to collection with relation key "' + this._relational.ownerKey + '"');
             } else {
               modelsToAdd.push(model);
