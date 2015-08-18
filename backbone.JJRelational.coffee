@@ -574,7 +574,7 @@ do () ->
         # trigger early if necessary
         triggerChanges()
         # remove from changes to prevent triggering it twice
-        i = changes.indexOf @.idAttribute
+        i = _.indexOf(changes, @.idAttribute)
         if ~i then changes.splice i, 1
         delete attrs[@.idAttribute]
 
