@@ -1057,7 +1057,7 @@ do () ->
               model = existModel
             else
               idsToAdd.push model
-              break
+              continue
           else
             # assume that the user wants a reverse key set to the relational owner
             # (but _.extend it if course, in case they passed in their own)

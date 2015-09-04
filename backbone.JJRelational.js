@@ -1215,7 +1215,7 @@
                 model = existModel;
               } else {
                 idsToAdd.push(model);
-                break;
+                continue;
               }
             } else {
               if (!options.parse && this._relational && this._relational.reverseKey && this._relational.owner) {
